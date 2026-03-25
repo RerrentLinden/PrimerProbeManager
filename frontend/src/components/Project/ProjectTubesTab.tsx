@@ -1,51 +1,55 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { PrimerTube, Primer } from '@/types'
+import { Link } from 'react-router-dom'
+import type { Primer } from '@/types'
 import { addProjectPrimer, removeProjectPrimer } from '@/api/projects'
 import { fetchPrimers } from '@/api/primers'
-import { fetchTubes } from '@/api/tubes'
-import VolumeBar from '@/components/common/VolumeBar'
 import Modal from '@/components/common/Modal'
 import EmptyState from '@/components/common/EmptyState'
 
+interface PrimerInfo {
+  readonly id: number
+  readonly name: string
+  readonly type: string
+}
+
 interface Props {
   readonly projectId: number
-  readonly tubes: PrimerTube[]
+  readonly primers: PrimerInfo[]
   readonly onRefresh: () => void
 }
 
-export default function ProjectTubesTab({ projectId, tubes, onRefresh }: Props) {
+export default function ProjectTubesTab({ projectId, primers, onRefresh }: Props) {
   const [showAdd, setShowAdd] = useState(false)
 
-  const handleRemove = useCallback(async (tubeId: number) => {
-    await removeProjectPrimer(projectId, tubeId)
+  const handleRemove = useCallback(async (primerId: number) => {
+    await removeProjectPrimer(projectId, primerId)
     onRefresh()
   }, [projectId, onRefresh])
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium">关联引物管 ({tubes.length})</h3>
+        <h3 className="font-medium">关联引物探针 ({primers.length})</h3>
         <button type="button" className="btn-primary text-sm" onClick={() => setShowAdd(true)}>
-          添加管
+          添加引物
         </button>
       </div>
 
-      {tubes.length === 0 ? (
-        <EmptyState title="暂无关联管" description="点击添加管按钮关联引物管" />
+      {primers.length === 0 ? (
+        <EmptyState title="暂无关联引物" description="点击添加引物按钮关联" />
       ) : (
         <div className="space-y-2">
-          {tubes.map((t) => (
-            <div key={t.id} className="card p-3 flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium">{t.primer_name}</span>
-                <span className="text-xs text-slate-500 ml-2">{t.batch_number}</span>
-              </div>
-              <div className="w-32">
-                <VolumeBar remaining={t.remaining_volume_ul} initial={t.initial_volume_ul} />
-              </div>
+          {primers.map((p) => (
+            <div key={p.id} className="card p-3 flex items-center gap-3">
+              <Link to={`/primers/${p.id}`} className="flex-1 min-w-0">
+                <span className="text-sm font-medium text-blue-600 hover:text-blue-800">{p.name}</span>
+              </Link>
+              <span className={p.type === 'probe' ? 'badge-probe' : 'badge-primer'}>
+                {p.type === 'probe' ? '探针' : '引物'}
+              </span>
               <button
                 type="button"
-                onClick={() => handleRemove(t.id)}
+                onClick={() => handleRemove(p.id)}
                 className="text-slate-400 hover:text-red-500 shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,9 +61,10 @@ export default function ProjectTubesTab({ projectId, tubes, onRefresh }: Props) 
         </div>
       )}
 
-      <AddTubeToProjectModal
+      <AddPrimerToProjectModal
         open={showAdd}
         projectId={projectId}
+        existingIds={primers.map((p) => p.id)}
         onClose={() => setShowAdd(false)}
         onSuccess={onRefresh}
       />
@@ -67,57 +72,50 @@ export default function ProjectTubesTab({ projectId, tubes, onRefresh }: Props) 
   )
 }
 
-function AddTubeToProjectModal({ open, projectId, onClose, onSuccess }: {
+function AddPrimerToProjectModal({ open, projectId, existingIds, onClose, onSuccess }: {
   readonly open: boolean
   readonly projectId: number
+  readonly existingIds: number[]
   readonly onClose: () => void
   readonly onSuccess: () => void
 }) {
   const [search, setSearch] = useState('')
   const [primers, setPrimers] = useState<Primer[]>([])
-  const [selectedPrimerId, setSelectedPrimerId] = useState<number | null>(null)
-  const [tubes, setTubes] = useState<PrimerTube[]>([])
 
   useEffect(() => {
     if (!open) return
     fetchPrimers({ search: search || undefined, page_size: 50 })
-      .then(({ data }) => setPrimers(data.items))
+      .then(({ data }) => setPrimers(data.items.filter((p) => !existingIds.includes(p.id))))
       .catch(() => {})
-  }, [open, search])
+  }, [open, search, existingIds])
 
-  useEffect(() => {
-    if (!selectedPrimerId) { setTubes([]); return }
-    fetchTubes(selectedPrimerId, 'active')
-      .then(({ data }) => setTubes(data))
-      .catch(() => {})
-  }, [selectedPrimerId])
-
-  const handleSelect = useCallback(async (tubeId: number) => {
-    await addProjectPrimer(projectId, tubeId)
+  const handleSelect = useCallback(async (primerId: number) => {
+    await addProjectPrimer(projectId, primerId)
     onSuccess()
     onClose()
   }, [projectId, onSuccess, onClose])
 
   return (
-    <Modal open={open} title="添加引物管到项目" onClose={onClose}>
+    <Modal open={open} title="添加引物到项目" onClose={onClose}>
       <div className="space-y-3">
         <input
           type="text"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setSelectedPrimerId(null) }}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="搜索引物..."
           className="input-field"
         />
-        {!selectedPrimerId && primers.map((p) => (
-          <button key={p.id} type="button" onClick={() => setSelectedPrimerId(p.id)} className="w-full text-left px-3 py-2 rounded hover:bg-slate-50 text-sm">
-            {p.name}
-          </button>
-        ))}
-        {selectedPrimerId && tubes.map((t) => (
-          <button key={t.id} type="button" onClick={() => handleSelect(t.id)} className="w-full card p-2 text-left hover:border-blue-300 text-sm">
-            {t.batch_number} — {t.remaining_volume_ul} uL
-          </button>
-        ))}
+        {primers.length === 0 && <p className="text-sm text-slate-400 text-center py-4">无可添加的引物</p>}
+        <div className="max-h-60 overflow-y-auto space-y-1">
+          {primers.map((p) => (
+            <button key={p.id} type="button" onClick={() => handleSelect(p.id)} className="w-full card p-2 text-left hover:border-blue-300 text-sm flex items-center gap-2">
+              <span className="font-medium">{p.name}</span>
+              <span className={p.type === 'probe' ? 'badge-probe' : 'badge-primer'}>
+                {p.type === 'probe' ? '探针' : '引物'}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </Modal>
   )

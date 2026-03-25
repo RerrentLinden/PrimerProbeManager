@@ -14,6 +14,52 @@ router = APIRouter(
 )
 
 
+@router.get("/search-tubes")
+async def search_placed_tubes(
+    q: str,
+    session: AsyncSession = Depends(get_session),
+):
+    """Search tubes placed in boxes by primer name or batch number."""
+    from sqlalchemy import select, or_
+    from app.models.box_position import BoxPosition
+    from app.models.primer_tube import PrimerTube
+    from app.models.primer import Primer
+    from app.models.freezer_box import FreezerBox as FBox
+    pattern = f"%{q}%"
+    query = (
+        select(
+            BoxPosition.box_id,
+            FBox.name,
+            BoxPosition.row,
+            BoxPosition.col,
+            Primer.name.label("primer_name"),
+            PrimerTube.batch_number,
+            PrimerTube.tube_number,
+        )
+        .join(PrimerTube, BoxPosition.tube_id == PrimerTube.id)
+        .join(Primer, PrimerTube.primer_id == Primer.id)
+        .join(FBox, BoxPosition.box_id == FBox.id)
+        .where(or_(
+            Primer.name.ilike(pattern),
+            PrimerTube.batch_number.ilike(pattern),
+        ))
+        .limit(20)
+    )
+    rows = (await session.execute(query)).all()
+    return [
+        {
+            "box_id": r.box_id,
+            "box_name": r.name,
+            "row": r.row,
+            "col": r.col,
+            "primer_name": r.primer_name,
+            "batch_number": r.batch_number,
+            "tube_number": r.tube_number,
+        }
+        for r in rows
+    ]
+
+
 @router.get("", response_model=list[BoxResponse])
 async def list_boxes(
     search: str | None = None,
@@ -84,6 +130,11 @@ async def delete_box(
     box = await box_service.get_box(session, box_id)
     if not box:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Box not found")
+    if box.positions:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="冻存盒内仍有管，请先清空后再删除",
+        )
     await box_service.delete_box(session, box)
 
 

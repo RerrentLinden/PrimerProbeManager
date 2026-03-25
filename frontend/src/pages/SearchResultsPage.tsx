@@ -25,6 +25,7 @@ export default function SearchResultsPage() {
   }, [])
 
   useEffect(() => { if (query) doSearch(query) }, [query, doSearch])
+  useEffect(() => { setInputValue(query) }, [query])
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -37,9 +38,9 @@ export default function SearchResultsPage() {
   )
 
   const handleTubeClick = useCallback(
-    (boxId: number | undefined, primerName: string) => {
+    (boxId: number | undefined, highlight: string) => {
       if (boxId) {
-        navigate(`/storage?highlight=${encodeURIComponent(primerName)}`)
+        navigate(`/storage?box=${boxId}&highlight=${encodeURIComponent(highlight)}`)
       }
     },
     [navigate],
@@ -103,7 +104,7 @@ function PrimerResults({ primers }: { readonly primers: SearchResults['primers']
 
 function TubeResults({ tubes, onTubeClick }: {
   readonly tubes: SearchResults['tubes']
-  readonly onTubeClick: (boxId: number | undefined, name: string) => void
+  readonly onTubeClick: (boxId: number | undefined, highlight: string) => void
 }) {
   if (tubes.length === 0) return null
   return (
@@ -114,7 +115,7 @@ function TubeResults({ tubes, onTubeClick }: {
           <button
             key={t.id}
             type="button"
-            onClick={() => onTubeClick(t.position?.box_id, t.primer_name ?? '')}
+            onClick={() => onTubeClick(t.position?.box_id, t.batch_number || t.primer_name || '')}
             className="card p-3 w-full text-left hover:border-blue-300"
           >
             <span className="font-medium">{t.primer_name}</span>
@@ -138,7 +139,7 @@ function BoxResults({ boxes }: { readonly boxes: SearchResults['boxes'] }) {
       <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">盒子 ({boxes.length})</h3>
       <div className="space-y-2">
         {boxes.map((b) => (
-          <Link key={b.id} to={`/storage`} className="card p-3 block hover:border-blue-300">
+          <Link key={b.id} to={`/storage?box=${b.id}`} className="card p-3 block hover:border-blue-300">
             <span className="font-medium">{b.name}</span>
             <span className="text-xs text-slate-500 ml-2">
               {b.storage_location} {b.storage_temperature}

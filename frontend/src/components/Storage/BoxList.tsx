@@ -38,6 +38,7 @@ function BoxCard({ box, isSelected, onSelect }: {
   return (
     <button
       type="button"
+      data-box-id={box.id}
       onClick={onSelect}
       className={`card p-3 w-full text-left transition-all ${
         isSelected ? 'ring-2 ring-blue-500 border-blue-300' : 'hover:border-slate-300'

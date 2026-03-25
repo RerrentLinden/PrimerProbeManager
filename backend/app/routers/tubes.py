@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import verify_token
@@ -56,15 +57,20 @@ async def update_tube(
     return _to_response(updated)
 
 
+class ArchiveRequest(BaseModel):
+    reason: str
+
+
 @router.put("/api/tubes/{tube_id}/archive", response_model=TubeResponse)
 async def archive_tube(
     tube_id: int,
+    body: ArchiveRequest,
     session: AsyncSession = Depends(get_session),
 ):
     tube = await tube_service.get_tube(session, tube_id)
     if not tube:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Tube not found")
-    archived = await tube_service.archive_tube(session, tube)
+    archived = await tube_service.archive_tube(session, tube, reason=body.reason)
     return _to_response(archived)
 
 
@@ -84,16 +90,19 @@ async def move_tube(
 def _to_response(t) -> TubeResponse:
     pos = None
     if t.position:
+        box = t.position.box if hasattr(t.position, "box") and t.position.box else None
         pos = TubePositionInfo(
             box_id=t.position.box_id,
-            box_name="",
+            box_name=box.name if box else "",
+            storage_location=box.storage_location if box else None,
+            storage_temperature=box.storage_temperature if box else None,
             row=t.position.row,
             col=t.position.col,
         )
     primer_name = t.primer.name if hasattr(t, "primer") and t.primer else None
     return TubeResponse(
         id=t.id, primer_id=t.primer_id, batch_number=t.batch_number,
-        dissolution_date=t.dissolution_date,
+        tube_number=t.tube_number, dissolution_date=t.dissolution_date,
         initial_volume_ul=t.initial_volume_ul,
         remaining_volume_ul=t.remaining_volume_ul,
         status=t.status, project=t.project,

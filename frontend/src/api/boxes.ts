@@ -1,6 +1,20 @@
 import client from './client'
 import type { FreezerBox, FreezerBoxCreate, GridSlot } from '@/types'
 
+export interface TubeSearchResult {
+  box_id: number
+  box_name: string
+  row: number
+  col: number
+  primer_name: string
+  batch_number: string
+  tube_number: string | null
+}
+
+export function searchPlacedTubes(q: string) {
+  return client.get<TubeSearchResult[]>('/boxes/search-tubes', { params: { q } })
+}
+
 export function fetchBoxes(search?: string) {
   return client.get<FreezerBox[]>('/boxes', {
     params: search ? { search } : undefined,

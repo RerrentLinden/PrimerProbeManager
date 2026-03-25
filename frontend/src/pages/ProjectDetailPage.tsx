@@ -1,29 +1,29 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchProject } from '@/api/projects'
-import type { Project, PrimerTube, ProjectGene } from '@/types'
+import type { Project, ProjectGene } from '@/types'
 import ProjectTubesTab from '@/components/Project/ProjectTubesTab'
 import GenePanelTab from '@/components/Project/GenePanelTab'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'
 
-type TabKey = 'tubes' | 'genes'
+type TabKey = 'primers' | 'genes'
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
   const projectId = Number(id)
   const [project, setProject] = useState<Project | null>(null)
-  const [tubes, setTubes] = useState<PrimerTube[]>([])
+  const [projectPrimers, setProjectPrimers] = useState<{ id: number; name: string; type: string }[]>([])
   const [genes, setGenes] = useState<ProjectGene[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabKey>('tubes')
+  const [activeTab, setActiveTab] = useState<TabKey>('primers')
 
   const loadData = useCallback(async () => {
     try {
       const { data } = await fetchProject(projectId)
       setProject(data)
-      setTubes(data.tubes)
-      setGenes(data.genes)
+      setProjectPrimers(data.primers ?? [])
+      setGenes(data.genes ?? [])
     } catch { /* handled */ }
     setLoading(false)
   }, [projectId])
@@ -51,8 +51,8 @@ export default function ProjectDetailPage() {
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="card p-5">
-        {activeTab === 'tubes' && (
-          <ProjectTubesTab projectId={projectId} tubes={tubes} onRefresh={loadData} />
+        {activeTab === 'primers' && (
+          <ProjectTubesTab projectId={projectId} primers={projectPrimers} onRefresh={loadData} />
         )}
         {activeTab === 'genes' && (
           <GenePanelTab projectId={projectId} genes={genes} onRefresh={loadData} />
@@ -67,7 +67,7 @@ function TabSwitcher({ activeTab, onTabChange }: {
   readonly onTabChange: (tab: TabKey) => void
 }) {
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'tubes', label: '引物管' },
+    { key: 'primers', label: '引物探针' },
     { key: 'genes', label: '基因面板' },
   ]
 

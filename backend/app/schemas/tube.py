@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 class TubeCreate(BaseModel):
     batch_number: str
+    tube_number: str | None = None
     dissolution_date: date | None = None
     initial_volume_ul: float
     project: str | None = None
@@ -11,6 +12,7 @@ class TubeCreate(BaseModel):
 
 class TubeUpdate(BaseModel):
     batch_number: str | None = None
+    tube_number: str | None = None
     dissolution_date: date | None = None
     initial_volume_ul: float | None = None
     remaining_volume_ul: float | None = None
@@ -26,6 +28,8 @@ class TubeMove(BaseModel):
 class TubePositionInfo(BaseModel):
     box_id: int
     box_name: str
+    storage_location: str | None = None
+    storage_temperature: str | None = None
     row: int
     col: int
 
@@ -36,6 +40,7 @@ class TubeResponse(BaseModel):
     id: int
     primer_id: int
     batch_number: str
+    tube_number: str | None = None
     dissolution_date: date | None
     initial_volume_ul: float
     remaining_volume_ul: float

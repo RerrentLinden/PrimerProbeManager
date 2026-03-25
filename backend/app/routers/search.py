@@ -30,6 +30,8 @@ def _tube_response(t) -> TubeResponse:
         pos = TubePositionInfo(
             box_id=t.position.box_id,
             box_name=box.name if box else "",
+            storage_location=box.storage_location if box else None,
+            storage_temperature=box.storage_temperature if box else None,
             row=t.position.row,
             col=t.position.col,
         )

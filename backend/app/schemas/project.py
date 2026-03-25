@@ -1,9 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
 
-from app.schemas.tube import TubeResponse
-
-
 class ProjectCreate(BaseModel):
     name: str
     description: str | None = None
@@ -18,7 +15,7 @@ class ProjectResponse(BaseModel):
     id: int
     name: str
     description: str | None
-    tube_count: int = 0
+    primer_count: int = 0
     gene_count: int = 0
     created_at: datetime
     updated_at: datetime
@@ -26,8 +23,16 @@ class ProjectResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ProjectPrimerInfo(BaseModel):
+    id: int
+    name: str
+    type: str
+
+    model_config = {"from_attributes": True}
+
+
 class ProjectDetailResponse(ProjectResponse):
-    tubes: list[TubeResponse] = []
+    primers: list[ProjectPrimerInfo] = []
     genes: list["ProjectGeneResponse"] = []
 
 
@@ -62,7 +67,7 @@ class GeneReorderRequest(BaseModel):
 
 
 class AddPrimerRequest(BaseModel):
-    tube_id: int
+    primer_id: int
 
 
 ProjectDetailResponse.model_rebuild()

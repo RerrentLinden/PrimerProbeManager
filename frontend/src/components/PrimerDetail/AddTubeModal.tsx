@@ -11,6 +11,7 @@ interface Props {
 
 export default function AddTubeModal({ open, primerId, onClose, onSuccess }: Props) {
   const [batch, setBatch] = useState('')
+  const [tubeNumber, setTubeNumber] = useState('')
   const [date, setDate] = useState('')
   const [volume, setVolume] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -21,10 +22,12 @@ export default function AddTubeModal({ open, primerId, onClose, onSuccess }: Pro
     try {
       await createTube(primerId, {
         batch_number: batch,
+        tube_number: tubeNumber || undefined,
         dissolution_date: date || undefined,
         initial_volume_ul: parseFloat(volume),
       })
       setBatch('')
+      setTubeNumber('')
       setDate('')
       setVolume('')
       onSuccess()
@@ -44,6 +47,16 @@ export default function AddTubeModal({ open, primerId, onClose, onSuccess }: Pro
             onChange={(e) => setBatch(e.target.value)}
             className="input-field"
             placeholder="如: HS260304046"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">分管编号</label>
+          <input
+            type="text"
+            value={tubeNumber}
+            onChange={(e) => setTubeNumber(e.target.value)}
+            className="input-field"
+            placeholder="如: #1, #2, A, B..."
           />
         </div>
         <div>

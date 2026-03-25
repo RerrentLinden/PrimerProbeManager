@@ -28,6 +28,11 @@ class PrimerUpdate(BaseModel):
     purification_method: str | None = None
 
 
+class PrimerProjectInfo(BaseModel):
+    id: int
+    name: str
+
+
 class PrimerResponse(BaseModel):
     id: int
     name: str
@@ -43,6 +48,7 @@ class PrimerResponse(BaseModel):
     tm: float | None
     purification_method: str | None
     active_tube_count: int = 0
+    projects: list[PrimerProjectInfo] = []
     created_at: datetime
     updated_at: datetime
 

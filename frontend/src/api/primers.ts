@@ -1,9 +1,13 @@
 import client from './client'
 import type { Primer, PrimerCreate, PaginatedResponse } from '@/types'
 
-interface PrimerQuery {
+export interface PrimerQuery {
   readonly search?: string
+  readonly search_field?: 'name' | 'sequence' | 'modification'
   readonly type?: 'primer' | 'probe'
+  readonly mod_5?: string
+  readonly mod_3?: string
+  readonly project_id?: number
   readonly page?: number
   readonly page_size?: number
 }
@@ -26,4 +30,8 @@ export function updatePrimer(id: number, data: Partial<PrimerCreate>) {
 
 export function deletePrimer(id: number) {
   return client.delete(`/primers/${id}`)
+}
+
+export function fetchModifications() {
+  return client.get<{ five_prime: string[]; three_prime: string[] }>('/primers/modifications')
 }

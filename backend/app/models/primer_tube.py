@@ -22,10 +22,12 @@ class PrimerTube(Base):
         Integer, ForeignKey("primers.id", ondelete="CASCADE"), index=True,
     )
     batch_number: Mapped[str] = mapped_column(String)
+    tube_number: Mapped[str | None] = mapped_column(String, nullable=True)
     dissolution_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     initial_volume_ul: Mapped[float] = mapped_column(Float)
     remaining_volume_ul: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String, default=DEFAULT_STATUS)
+    archive_reason: Mapped[str | None] = mapped_column(String, nullable=True)
     project: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(),

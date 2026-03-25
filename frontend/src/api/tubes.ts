@@ -15,8 +15,8 @@ export function updateTube(id: number, data: Partial<TubeCreate>) {
   return client.put<PrimerTube>(`/tubes/${id}`, data)
 }
 
-export function archiveTube(id: number) {
-  return client.put(`/tubes/${id}/archive`)
+export function archiveTube(id: number, reason: string) {
+  return client.put(`/tubes/${id}/archive`, { reason })
 }
 
 export function moveTube(id: number, box_id: number, row: number, col: number) {

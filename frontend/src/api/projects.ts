@@ -1,5 +1,5 @@
 import client from './client'
-import type { Project, ProjectCreate, ProjectGene, ProjectGeneCreate, PrimerTube } from '@/types'
+import type { Project, ProjectCreate, ProjectGene, ProjectGeneCreate } from '@/types'
 
 export function fetchProjects(search?: string) {
   return client.get<Project[]>('/projects', {
@@ -8,7 +8,7 @@ export function fetchProjects(search?: string) {
 }
 
 export function fetchProject(id: number) {
-  return client.get<Project & { tubes: PrimerTube[]; genes: ProjectGene[] }>(`/projects/${id}`)
+  return client.get<Project>(`/projects/${id}`)
 }
 
 export function createProject(data: ProjectCreate) {
@@ -23,12 +23,12 @@ export function deleteProject(id: number) {
   return client.delete(`/projects/${id}`)
 }
 
-export function addProjectPrimer(projectId: number, tubeId: number) {
-  return client.post(`/projects/${projectId}/primers`, { tube_id: tubeId })
+export function addProjectPrimer(projectId: number, primerId: number) {
+  return client.post(`/projects/${projectId}/primers`, { primer_id: primerId })
 }
 
-export function removeProjectPrimer(projectId: number, tubeId: number) {
-  return client.delete(`/projects/${projectId}/primers/${tubeId}`)
+export function removeProjectPrimer(projectId: number, primerId: number) {
+  return client.delete(`/projects/${projectId}/primers/${primerId}`)
 }
 
 export function fetchProjectGenes(projectId: number) {

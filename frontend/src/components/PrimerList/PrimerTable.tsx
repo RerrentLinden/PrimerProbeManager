@@ -20,40 +20,53 @@ export default function PrimerTable({ primers }: Props) {
       <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-            <th className="pb-3 pr-3" style={{ width: '12%' }}>名称</th>
-            <th className="pb-3 pr-3" style={{ width: '26%' }}>序列</th>
-            <th className="pb-3 pr-3" style={{ width: '20%' }}>修饰</th>
-            <th className="pb-3 pr-3" style={{ width: '6%' }}>类型</th>
-            <th className="pb-3 pr-3" style={{ width: '10%' }}>MW</th>
-            <th className="pb-3 pr-3" style={{ width: '7%' }}>Tm</th>
-            <th className="pb-3 pr-3" style={{ width: '7%' }}>GC%</th>
-            <th className="pb-3" style={{ width: '7%' }}>管数</th>
+            <th className="pb-3 pr-3" style={{ width: '9%' }}>名称</th>
+            <th className="pb-3 pr-3" style={{ width: '20%' }}>序列</th>
+            <th className="pb-3 pr-3" style={{ width: '10%' }}>修饰</th>
+            <th className="pb-3 pr-3" style={{ width: '5%' }}>类型</th>
+            <th className="pb-3 pr-3" style={{ width: '20%' }}>项目</th>
+            <th className="pb-3 pr-3" style={{ width: '8%' }}>MW</th>
+            <th className="pb-3 pr-3" style={{ width: '6%' }}>Tm</th>
+            <th className="pb-3 pr-3" style={{ width: '6%' }}>GC%</th>
+            <th className="pb-3" style={{ width: '4%' }}>管数</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
           {primers.map((p) => (
             <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-              <td className="py-3 pr-4 truncate">
+              <td className="py-3 pr-3 truncate">
                 <Link to={`/primers/${p.id}`} className="font-medium text-blue-600 hover:text-blue-800">
                   {p.name}
                 </Link>
               </td>
-              <td className="py-3 pr-4">
+              <td className="py-3 pr-3">
                 <CopyableSequence sequence={p.sequence} />
               </td>
-              <td className="py-3 pr-4 text-xs text-slate-500 truncate" title={formatModifications(p)}>
-                {formatModifications(p)}
+              <td className="py-3 pr-3 text-xs text-slate-500 truncate" title={formatModifications(p)}>
+                {formatModifications(p) || '-'}
               </td>
-              <td className="py-3 pr-4">
+              <td className="py-3 pr-3">
                 <span className={p.type === 'probe' ? 'badge-probe' : 'badge-primer'}>
                   {p.type === 'probe' ? '探针' : '引物'}
                 </span>
               </td>
-              <td className="py-3 pr-4 tabular-nums text-slate-600 truncate">
-                {p.mw?.toFixed(1) ?? '-'}
+              <td className="py-3 pr-3">
+                <div className="flex flex-wrap gap-1">
+                  {(p.projects ?? []).map((proj) => (
+                    <Link
+                      key={proj.id}
+                      to={`/projects/${proj.id}`}
+                      className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    >
+                      {proj.name}
+                    </Link>
+                  ))}
+                  {(!p.projects || p.projects.length === 0) && <span className="text-xs text-slate-300">-</span>}
+                </div>
               </td>
-              <td className="py-3 pr-4 tabular-nums text-slate-600">{p.tm?.toFixed(1) ?? '-'}</td>
-              <td className="py-3 pr-4 tabular-nums text-slate-600">{formatGcPercent(p.gc_percent)}</td>
+              <td className="py-3 pr-3 tabular-nums text-slate-600 truncate">{p.mw?.toFixed(1) ?? '-'}</td>
+              <td className="py-3 pr-3 tabular-nums text-slate-600">{p.tm?.toFixed(1) ?? '-'}</td>
+              <td className="py-3 pr-3 tabular-nums text-slate-600">{formatGcPercent(p.gc_percent)}</td>
               <td className="py-3 tabular-nums">{p.active_tube_count ?? 0}</td>
             </tr>
           ))}
@@ -79,11 +92,7 @@ function CopyableSequence({ sequence }: { readonly sequence: string }) {
       title="点击复制完整序列"
       className="font-sequence text-xs text-slate-600 hover:text-blue-600 cursor-pointer transition-colors block w-full text-left truncate"
     >
-      {copied ? (
-        <span className="text-green-600">已复制 ✓</span>
-      ) : (
-        sequence
-      )}
+      {copied ? <span className="text-green-600">已复制 ✓</span> : sequence}
     </button>
   )
 }

@@ -6,8 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.models.project import Project
 from app.models.project_primer import ProjectPrimer
 from app.models.project_gene import ProjectGene
-from app.models.primer_tube import PrimerTube
-from app.models.box_position import BoxPosition
+from app.models.primer import Primer
 from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectGeneCreate, ProjectGeneUpdate,
 )
@@ -33,25 +32,20 @@ async def get_project(session: AsyncSession, project_id: int) -> dict | None:
         .where(Project.id == project_id)
         .options(
             selectinload(Project.primer_links)
-            .selectinload(ProjectPrimer.tube)
-            .selectinload(PrimerTube.primer),
-            selectinload(Project.primer_links)
-            .selectinload(ProjectPrimer.tube)
-            .selectinload(PrimerTube.position)
-            .selectinload(BoxPosition.box),
+            .selectinload(ProjectPrimer.primer),
             selectinload(Project.genes),
         )
     )
     project = (await session.execute(query)).scalar_one_or_none()
     if not project:
         return None
-    tubes = [link.tube for link in project.primer_links if link.tube]
+    primers = [link.primer for link in project.primer_links if link.primer]
     genes = sorted(project.genes, key=lambda g: g.sort_order)
     counts = await _get_counts(session, project.id)
     return {
         **_project_dict(project),
         **counts,
-        "tubes": tubes,
+        "primers": primers,
         "genes": genes,
     }
 
@@ -81,28 +75,40 @@ async def delete_project(session: AsyncSession, project: Project) -> None:
     await session.commit()
 
 
-async def add_tube_to_project(
-    session: AsyncSession, project_id: int, tube_id: int,
+async def add_primer_to_project(
+    session: AsyncSession, project_id: int, primer_id: int,
 ) -> ProjectPrimer:
-    link = ProjectPrimer(project_id=project_id, tube_id=tube_id)
+    link = ProjectPrimer(project_id=project_id, primer_id=primer_id)
     session.add(link)
     await session.commit()
     await session.refresh(link)
     return link
 
 
-async def remove_tube_from_project(
-    session: AsyncSession, project_id: int, tube_id: int,
+async def remove_primer_from_project(
+    session: AsyncSession, project_id: int, primer_id: int,
 ) -> None:
     query = select(ProjectPrimer).where(
         ProjectPrimer.project_id == project_id,
-        ProjectPrimer.tube_id == tube_id,
+        ProjectPrimer.primer_id == primer_id,
     )
     link = (await session.execute(query)).scalar_one_or_none()
     if not link:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Link not found")
     await session.delete(link)
     await session.commit()
+
+
+async def get_primer_projects(
+    session: AsyncSession, primer_id: int,
+) -> list[dict]:
+    query = (
+        select(Project)
+        .join(ProjectPrimer)
+        .where(ProjectPrimer.primer_id == primer_id)
+    )
+    projects = (await session.execute(query)).scalars().all()
+    return [{"id": p.id, "name": p.name} for p in projects]
 
 
 async def add_gene(
@@ -186,7 +192,7 @@ async def list_genes(
 
 
 async def _get_counts(session: AsyncSession, project_id: int) -> dict:
-    tube_count = (
+    primer_count = (
         await session.execute(
             select(func.count(ProjectPrimer.id))
             .where(ProjectPrimer.project_id == project_id)
@@ -198,7 +204,7 @@ async def _get_counts(session: AsyncSession, project_id: int) -> dict:
             .where(ProjectGene.project_id == project_id)
         )
     ).scalar_one()
-    return {"tube_count": tube_count, "gene_count": gene_count}
+    return {"primer_count": primer_count, "gene_count": gene_count}
 
 
 def _project_dict(p: Project) -> dict:

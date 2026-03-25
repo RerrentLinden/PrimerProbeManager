@@ -13,9 +13,10 @@ export interface Primer {
   readonly gc_percent: number | null
   readonly tm: number | null
   readonly purification_method: string | null
+  readonly active_tube_count?: number
+  readonly projects?: { id: number; name: string }[]
   readonly created_at: string
   readonly updated_at: string
-  readonly active_tube_count?: number
 }
 
 export interface PrimerCreate {
@@ -36,6 +37,7 @@ export interface PrimerTube {
   readonly id: number
   readonly primer_id: number
   readonly batch_number: string
+  readonly tube_number: string | null
   readonly dissolution_date: string | null
   readonly initial_volume_ul: number
   readonly remaining_volume_ul: number
@@ -50,6 +52,7 @@ export interface PrimerTube {
 
 export interface TubeCreate {
   readonly batch_number: string
+  readonly tube_number?: string | null
   readonly dissolution_date?: string | null
   readonly initial_volume_ul: number
   readonly project?: string | null
@@ -58,6 +61,8 @@ export interface TubeCreate {
 export interface BoxPositionInfo {
   readonly box_id: number
   readonly box_name: string
+  readonly storage_location: string | null
+  readonly storage_temperature: string | null
   readonly row: number
   readonly col: number
 }
@@ -113,6 +118,7 @@ export interface GridTubeInfo {
   readonly primer_name: string
   readonly primer_type: 'primer' | 'probe'
   readonly batch_number: string
+  readonly tube_number: string | null
   readonly remaining_volume_ul: number
   readonly initial_volume_ul: number
 }
@@ -126,6 +132,8 @@ export interface Project {
   readonly updated_at: string
   readonly primer_count?: number
   readonly gene_count?: number
+  readonly primers?: { id: number; name: string; type: string }[]
+  readonly genes?: ProjectGene[]
 }
 
 export interface ProjectCreate {

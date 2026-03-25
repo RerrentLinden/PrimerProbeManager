@@ -56,6 +56,7 @@ def build_grid(box: FreezerBox) -> list[list[GridSlot]]:
                     primer_name=tube.primer.name,
                     primer_type=tube.primer.type,
                     batch_number=tube.batch_number,
+                    tube_number=tube.tube_number,
                     remaining_volume_ul=tube.remaining_volume_ul,
                     initial_volume_ul=tube.initial_volume_ul,
                 ),

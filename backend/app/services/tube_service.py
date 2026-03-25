@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.models.primer_tube import PrimerTube
 from app.models.usage_log import UsageLog
 from app.models.box_position import BoxPosition
+from app.models.freezer_box import FreezerBox
 from app.schemas.tube import TubeCreate, TubeUpdate, TubeMove
 from app.schemas.usage_log import UsageLogCreate
 
@@ -21,7 +22,9 @@ async def list_tubes(
     query = (
         select(PrimerTube)
         .where(PrimerTube.primer_id == primer_id)
-        .options(selectinload(PrimerTube.position))
+        .options(
+            selectinload(PrimerTube.position).selectinload(BoxPosition.box),
+        )
         .order_by(PrimerTube.id.desc())
     )
     if tube_status:
@@ -34,7 +37,7 @@ async def get_tube(session: AsyncSession, tube_id: int) -> PrimerTube | None:
         select(PrimerTube)
         .where(PrimerTube.id == tube_id)
         .options(
-            selectinload(PrimerTube.position),
+            selectinload(PrimerTube.position).selectinload(BoxPosition.box),
             selectinload(PrimerTube.primer),
         )
     )
@@ -47,6 +50,7 @@ async def create_tube(
     tube = PrimerTube(
         primer_id=primer_id,
         batch_number=data.batch_number,
+        tube_number=data.tube_number,
         dissolution_date=data.dissolution_date,
         initial_volume_ul=data.initial_volume_ul,
         remaining_volume_ul=data.initial_volume_ul,
@@ -68,12 +72,17 @@ async def update_tube(
     return tube
 
 
-async def archive_tube(session: AsyncSession, tube: PrimerTube) -> PrimerTube:
+async def archive_tube(
+    session: AsyncSession, tube: PrimerTube, *, reason: str | None = None,
+) -> PrimerTube:
     tube.status = "archived"
-    if tube.position:
-        await session.delete(tube.position)
+    tube.archive_reason = reason
+    old_pos = (await session.execute(
+        select(BoxPosition).where(BoxPosition.tube_id == tube.id)
+    )).scalar_one_or_none()
+    if old_pos:
+        await session.delete(old_pos)
     await session.commit()
-    await session.refresh(tube, ["position"])
     return tube
 
 
@@ -83,8 +92,11 @@ async def move_tube(
     _check_active(tube)
     await _check_target_empty(session, data.box_id, data.row, data.col)
 
-    if tube.position:
-        await session.delete(tube.position)
+    old_pos = (await session.execute(
+        select(BoxPosition).where(BoxPosition.tube_id == tube.id)
+    )).scalar_one_or_none()
+    if old_pos:
+        await session.delete(old_pos)
         await session.flush()
 
     new_pos = BoxPosition(
@@ -92,7 +104,6 @@ async def move_tube(
     )
     session.add(new_pos)
     await session.commit()
-    await session.refresh(tube, ["position"])
     return tube
 
 

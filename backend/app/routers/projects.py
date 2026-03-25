@@ -5,10 +5,10 @@ from app.auth import verify_token
 from app.database import get_session
 from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectResponse, ProjectDetailResponse,
+    ProjectPrimerInfo,
     ProjectGeneCreate, ProjectGeneUpdate, ProjectGeneResponse,
     GeneReorderRequest, AddPrimerRequest,
 )
-from app.schemas.tube import TubeResponse, TubePositionInfo
 from app.services import project_service
 
 router = APIRouter(
@@ -47,30 +47,11 @@ async def get_project(
     data = await project_service.get_project(session, project_id)
     if not data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Project not found")
-    data["tubes"] = [_tube_response(t) for t in data.get("tubes", [])]
+    data["primers"] = [
+        ProjectPrimerInfo(id=p.id, name=p.name, type=p.type)
+        for p in data.get("primers", [])
+    ]
     return data
-
-
-def _tube_response(t) -> TubeResponse:
-    pos = None
-    if t.position:
-        box = t.position.box if hasattr(t.position, "box") else None
-        pos = TubePositionInfo(
-            box_id=t.position.box_id,
-            box_name=box.name if box else "",
-            row=t.position.row,
-            col=t.position.col,
-        )
-    primer_name = t.primer.name if hasattr(t, "primer") and t.primer else None
-    return TubeResponse(
-        id=t.id, primer_id=t.primer_id, batch_number=t.batch_number,
-        dissolution_date=t.dissolution_date,
-        initial_volume_ul=t.initial_volume_ul,
-        remaining_volume_ul=t.remaining_volume_ul,
-        status=t.status, project=t.project,
-        position=pos, primer_name=primer_name,
-        created_at=t.created_at, updated_at=t.updated_at,
-    )
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)
@@ -106,19 +87,19 @@ async def add_primer_to_project(
     body: AddPrimerRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    await project_service.add_tube_to_project(session, project_id, body.tube_id)
+    await project_service.add_primer_to_project(session, project_id, body.primer_id)
     return {"ok": True}
 
 
 @router.delete(
-    "/{project_id}/primers/{tube_id}",
+    "/{project_id}/primers/{primer_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def remove_primer_from_project(
-    project_id: int, tube_id: int,
+    project_id: int, primer_id: int,
     session: AsyncSession = Depends(get_session),
 ):
-    await project_service.remove_tube_from_project(session, project_id, tube_id)
+    await project_service.remove_primer_from_project(session, project_id, primer_id)
 
 
 @router.get(

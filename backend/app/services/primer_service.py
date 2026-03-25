@@ -4,6 +4,9 @@ from sqlalchemy.orm import selectinload
 
 from app.models.primer import Primer
 from app.models.primer_tube import PrimerTube
+from app.models.box_position import BoxPosition
+from app.models.project import Project
+from app.models.project_primer import ProjectPrimer
 from app.schemas.primer import PrimerCreate, PrimerUpdate
 
 SEQUENCE_CHARS = frozenset("ATCGatcg")
@@ -17,7 +20,11 @@ async def list_primers(
     session: AsyncSession,
     *,
     search: str | None = None,
+    search_field: str | None = None,
     primer_type: str | None = None,
+    mod_5: str | None = None,
+    mod_3: str | None = None,
+    project_id: int | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Primer], int]:
@@ -26,23 +33,74 @@ async def list_primers(
 
     if search:
         pattern = f"%{search}%"
-        flt = or_(Primer.name.ilike(pattern), Primer.sequence.ilike(pattern))
+        flt = _build_search_filter(pattern, search_field)
         query = query.where(flt)
         count_query = count_query.where(flt)
 
     if primer_type in ("primer", "probe"):
         query, count_query = _filter_by_type(query, count_query, primer_type)
 
+    if mod_5 is not None:
+        flt = _mod_filter(Primer.modification_5prime, mod_5)
+        query = query.where(flt)
+        count_query = count_query.where(flt)
+
+    if mod_3 is not None:
+        flt = _mod_filter(Primer.modification_3prime, mod_3)
+        query = query.where(flt)
+        count_query = count_query.where(flt)
+
+    if project_id:
+        proj_flt = Primer.id.in_(
+            select(ProjectPrimer.primer_id).where(
+                ProjectPrimer.project_id == project_id
+            )
+        )
+        query = query.where(proj_flt)
+        count_query = count_query.where(proj_flt)
+
     total = (await session.execute(count_query)).scalar_one()
-    offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size).order_by(Primer.id.desc())
-    query = query.options(selectinload(Primer.tubes))
+    query = (
+        query.order_by(Primer.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .options(selectinload(Primer.tubes))
+    )
     result = (await session.execute(query)).scalars().all()
     return list(result), total
 
 
+def _mod_filter(column, value: str):
+    """'__none__' = no modification, otherwise ilike match."""
+    if value == "__none__":
+        return column.is_(None)
+    return column.ilike(f"%{value}%")
+
+
+def _build_search_filter(pattern: str, field: str | None):
+    if field == "name":
+        return Primer.name.ilike(pattern)
+    if field == "sequence":
+        return Primer.sequence.ilike(pattern)
+    if field == "modification":
+        return or_(
+            Primer.modification_5prime.ilike(pattern),
+            Primer.modification_3prime.ilike(pattern),
+        )
+    return or_(
+        Primer.name.ilike(pattern),
+        Primer.sequence.ilike(pattern),
+        Primer.modification_5prime.ilike(pattern),
+        Primer.modification_3prime.ilike(pattern),
+        Primer.id.in_(
+            select(ProjectPrimer.primer_id)
+            .join(Project)
+            .where(Project.name.ilike(pattern))
+        ),
+    )
+
+
 def _filter_by_type(query, count_query, primer_type: str):
-    """Filter primers by type: probe = has any modification."""
     has_mod = or_(
         Primer.modification_5prime.isnot(None),
         Primer.modification_3prime.isnot(None),
@@ -56,7 +114,11 @@ async def get_primer(session: AsyncSession, primer_id: int) -> Primer | None:
     query = (
         select(Primer)
         .where(Primer.id == primer_id)
-        .options(selectinload(Primer.tubes).selectinload(PrimerTube.position))
+        .options(
+            selectinload(Primer.tubes)
+            .selectinload(PrimerTube.position)
+            .selectinload(BoxPosition.box),
+        )
     )
     return (await session.execute(query)).scalar_one_or_none()
 

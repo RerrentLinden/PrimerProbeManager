@@ -38,6 +38,7 @@ class SlotTubeInfo(BaseModel):
     primer_name: str
     primer_type: str
     batch_number: str
+    tube_number: str | None = None
     remaining_volume_ul: float
     initial_volume_ul: float
 

@@ -4,9 +4,10 @@ import { formatGcPercent } from '@/utils/format'
 
 interface Props {
   readonly primer: Primer
+  readonly onEdit?: () => void
 }
 
-export default function PrimerInfoCard({ primer }: Props) {
+export default function PrimerInfoCard({ primer, onEdit }: Props) {
   const [copied, setCopied] = useState(false)
 
   const copySequence = useCallback(async () => {
@@ -24,6 +25,9 @@ export default function PrimerInfoCard({ primer }: Props) {
             {primer.type === 'probe' ? '探针' : '引物'}
           </span>
         </div>
+        {onEdit && (
+          <button type="button" onClick={onEdit} className="btn-secondary text-xs py-1 px-2.5">编辑</button>
+        )}
       </div>
 
       <div className="mb-4">
