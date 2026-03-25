@@ -42,6 +42,7 @@ class PrimerResponse(BaseModel):
     gc_percent: float | None
     tm: float | None
     purification_method: str | None
+    active_tube_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -57,7 +58,6 @@ class PrimerListResponse(BaseModel):
 
 class PrimerDetailResponse(PrimerResponse):
     tubes: list["TubeResponse"] = Field(default_factory=list)
-    active_tube_count: int = 0
 
 
 from app.schemas.tube import TubeResponse  # noqa: E402

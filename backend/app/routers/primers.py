@@ -51,12 +51,9 @@ async def get_primer(
     primer = await primer_service.get_primer(session, primer_id)
     if not primer:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Primer not found")
-    active_count = sum(1 for t in primer.tubes if t.status == "active")
     tubes = [_tube_response(t) for t in primer.tubes]
     resp = _to_response(primer)
-    return PrimerDetailResponse(
-        **resp.model_dump(), tubes=tubes, active_tube_count=active_count,
-    )
+    return PrimerDetailResponse(**resp.model_dump(), tubes=tubes)
 
 
 @router.put("/{primer_id}", response_model=PrimerResponse)
@@ -84,6 +81,7 @@ async def delete_primer(
 
 
 def _to_response(p) -> PrimerResponse:
+    active = sum(1 for t in p.tubes if t.status == "active") if p.tubes else 0
     return PrimerResponse(
         id=p.id, name=p.name, sequence=p.sequence,
         base_count=p.base_count, type=p.type,
@@ -92,6 +90,7 @@ def _to_response(p) -> PrimerResponse:
         mw=p.mw, ug_per_od=p.ug_per_od, nmol_per_od=p.nmol_per_od,
         gc_percent=p.gc_percent, tm=p.tm,
         purification_method=p.purification_method,
+        active_tube_count=active,
         created_at=p.created_at, updated_at=p.updated_at,
     )
 
