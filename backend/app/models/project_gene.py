@@ -17,7 +17,6 @@ class ProjectGene(Base):
     gene_name: Mapped[str] = mapped_column(String)
     tube_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     fluorescence_channel: Mapped[str | None] = mapped_column(String, nullable=True)
-    function_note: Mapped[str | None] = mapped_column(String, nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
     project: Mapped["Project"] = relationship(

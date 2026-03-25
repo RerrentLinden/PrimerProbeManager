@@ -48,7 +48,7 @@ export default function ProjectListPage() {
                 <p className="text-sm text-slate-500 mt-1 line-clamp-2">{p.description}</p>
               )}
               <div className="flex gap-4 mt-3 text-xs text-slate-400">
-                <span>引物: {p.primer_count ?? 0}</span>
+                <span>引探: {p.primer_count ?? 0}</span>
                 <span>基因: {p.gene_count ?? 0}</span>
               </div>
             </Link>

@@ -9,6 +9,7 @@ import StatCards from '@/components/PrimerList/StatCards'
 import PrimerTable from '@/components/PrimerList/PrimerTable'
 import PrimerCardList from '@/components/PrimerList/PrimerCardList'
 import AlertDrawer from '@/components/PrimerList/AlertDrawer'
+import CreatePrimerModal from '@/components/PrimerList/CreatePrimerModal'
 import EmptyState from '@/components/common/EmptyState'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
@@ -28,12 +29,13 @@ export default function PrimerListPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [showCreate, setShowCreate] = useState(false)
 
   const [mod5Options, setMod5Options] = useState<string[]>([])
   const [mod3Options, setMod3Options] = useState<string[]>([])
   const [projectOptions, setProjectOptions] = useState<Project[]>([])
 
-  useEffect(() => {
+  const loadSummary = useCallback(() => {
     fetchStats().then(({ data }) => setStats(data)).catch(() => {})
     fetchLowVolumeAlerts().then(({ data }) => setAlerts(data)).catch(() => {})
     fetchModifications().then(({ data }) => {
@@ -42,6 +44,10 @@ export default function PrimerListPage() {
     }).catch(() => {})
     fetchProjects().then(({ data }) => setProjectOptions(data)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    loadSummary()
+  }, [loadSummary])
 
   const debouncedSearch = useDebounce(search)
 
@@ -66,12 +72,27 @@ export default function PrimerListPage() {
   useEffect(() => { loadPrimers() }, [loadPrimers])
 
   const resetPage = useCallback(() => setPage(1), [])
+  const handleCreateSuccess = useCallback(() => {
+    loadSummary()
+    if (page === 1) {
+      void loadPrimers()
+      return
+    }
+    setPage(1)
+  }, [loadPrimers, loadSummary, page])
   const hasFilters = typeFilter || mod5Filter || mod3Filter || projectFilter
   const hasSearchContext = Boolean(debouncedSearch || hasFilters)
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold text-slate-800">引探管理</h1>
+        <button type="button" className="btn-primary text-sm shrink-0" onClick={() => setShowCreate(true)}>
+          新建引探
+        </button>
+      </div>
+
       <StatCards stats={stats} onAlertClick={() => setShowAlerts(true)} />
 
       {/* Filter bar + search */}
@@ -98,8 +119,8 @@ export default function PrimerListPage() {
         <LoadingSpinner />
       ) : primers.length === 0 ? (
         <EmptyState
-          title={hasSearchContext ? '未找到匹配引物' : '暂无引物'}
-          description={hasSearchContext ? '调整关键词或筛选条件后再试' : '导入或创建引物后会显示在这里'}
+          title={hasSearchContext ? '未找到匹配引探' : '暂无引探'}
+          description={hasSearchContext ? '调整关键词或筛选条件后再试' : '导入或新增引探后会显示在这里'}
         />
       ) : (
         <>
@@ -110,6 +131,7 @@ export default function PrimerListPage() {
       )}
 
       <AlertDrawer open={showAlerts} alerts={alerts} onClose={() => setShowAlerts(false)} />
+      <CreatePrimerModal open={showCreate} onClose={() => setShowCreate(false)} onSuccess={handleCreateSuccess} />
     </div>
   )
 }

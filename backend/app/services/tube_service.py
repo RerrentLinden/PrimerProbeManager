@@ -6,11 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.primer_tube import PrimerTube
+from app.models.primer import Primer
 from app.models.usage_log import UsageLog
 from app.models.box_position import BoxPosition
 from app.models.freezer_box import FreezerBox
 from app.schemas.tube import TubeCreate, TubeUpdate, TubeMove
 from app.schemas.usage_log import UsageLogCreate
+from app.services import tube_lifecycle_log_service
 
 
 async def list_tubes(
@@ -47,6 +49,7 @@ async def get_tube(session: AsyncSession, tube_id: int) -> PrimerTube | None:
 async def create_tube(
     session: AsyncSession, primer_id: int, data: TubeCreate,
 ) -> PrimerTube:
+    primer = await _get_primer(session, primer_id)
     tube = PrimerTube(
         primer_id=primer_id,
         batch_number=data.batch_number,
@@ -57,6 +60,13 @@ async def create_tube(
         project=data.project,
     )
     session.add(tube)
+    await session.flush()
+    tube_lifecycle_log_service.stage_created_log(
+        session,
+        tube=tube,
+        primer_name=primer.name,
+        primer_type=primer.type,
+    )
     await session.commit()
     await session.refresh(tube, ["position"])
     return tube
@@ -75,6 +85,9 @@ async def update_tube(
 async def archive_tube(
     session: AsyncSession, tube: PrimerTube, *, reason: str | None = None,
 ) -> PrimerTube:
+    from_position = await tube_lifecycle_log_service.get_current_position_label(
+        session, tube.id,
+    )
     tube.status = "archived"
     tube.archive_reason = reason
     old_pos = (await session.execute(
@@ -82,6 +95,14 @@ async def archive_tube(
     )).scalar_one_or_none()
     if old_pos:
         await session.delete(old_pos)
+    tube_lifecycle_log_service.stage_archive_log(
+        session,
+        tube=tube,
+        primer_name=tube.primer.name,
+        primer_type=tube.primer.type,
+        archive_reason=reason,
+        from_position=from_position,
+    )
     await session.commit()
     return tube
 
@@ -91,6 +112,12 @@ async def move_tube(
 ) -> PrimerTube:
     _check_active(tube)
     await _check_target_empty(session, data.box_id, data.row, data.col)
+    from_position = await tube_lifecycle_log_service.get_current_position_label(
+        session, tube.id,
+    )
+    to_position = await tube_lifecycle_log_service.get_target_position_label(
+        session, data.box_id, data.row, data.col,
+    )
 
     old_pos = (await session.execute(
         select(BoxPosition).where(BoxPosition.tube_id == tube.id)
@@ -103,6 +130,14 @@ async def move_tube(
         box_id=data.box_id, row=data.row, col=data.col, tube_id=tube.id,
     )
     session.add(new_pos)
+    tube_lifecycle_log_service.stage_position_log(
+        session,
+        tube=tube,
+        primer_name=tube.primer.name,
+        primer_type=tube.primer.type,
+        from_position=from_position,
+        to_position=to_position,
+    )
     await session.commit()
     return tube
 
@@ -130,6 +165,16 @@ async def add_usage_log(
     )
     tube.remaining_volume_ul = remaining
     session.add(log)
+    tube_lifecycle_log_service.stage_usage_log(
+        session,
+        tube=tube,
+        primer_name=tube.primer.name,
+        primer_type=tube.primer.type,
+        volume_used_ul=data.volume_used_ul,
+        remaining_volume_ul=remaining,
+        purpose=data.purpose,
+        project_name=data.project,
+    )
     await session.commit()
     await session.refresh(log)
     return log
@@ -171,3 +216,11 @@ async def _check_target_empty(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Position ({row}, {col}) is already occupied",
         )
+
+
+async def _get_primer(session: AsyncSession, primer_id: int):
+    result = await session.execute(select(Primer).where(Primer.id == primer_id))
+    primer = result.scalar_one_or_none()
+    if primer is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Primer not found")
+    return primer

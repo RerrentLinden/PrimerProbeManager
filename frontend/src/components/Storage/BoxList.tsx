@@ -11,7 +11,7 @@ export default function BoxList({ boxes, selectedId, onSelect, onCreateBox }: Pr
   return (
     <div className="space-y-3">
       <button type="button" className="btn-primary w-full text-sm" onClick={onCreateBox}>
-        新建盒子
+        新冻存盒
       </button>
 
       {boxes.map((box) => (

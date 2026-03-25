@@ -6,6 +6,7 @@ from app.models.box_position import BoxPosition
 from app.models.project import Project
 from app.models.project_primer import ProjectPrimer
 from app.models.project_gene import ProjectGene
+from app.models.tube_lifecycle_log import TubeLifecycleLog
 
 __all__ = [
     "Primer",
@@ -16,4 +17,5 @@ __all__ = [
     "Project",
     "ProjectPrimer",
     "ProjectGene",
+    "TubeLifecycleLog",
 ]

@@ -66,7 +66,7 @@ export default function TubeCard({ tube, onRecordUsage, onEdit, onAssignPosition
       {/* Position bar */}
       <div className="px-4 pb-3 -mt-1">
         {pos ? (
-          <button type="button" onClick={handlePositionClick} className="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg hover:bg-emerald-100 transition-colors" title="点击跳转到位置管理">
+          <button type="button" onClick={handlePositionClick} className="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg hover:bg-emerald-100 transition-colors" title="点击跳转到存放管理">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -123,7 +123,7 @@ function ArchiveModal({ open, tubeId, tubeName, onClose, onSuccess }: {
   }, [tubeId, reason, onSuccess, onClose])
 
   return (
-    <Modal open={open} title="归档引物管" onClose={onClose}>
+    <Modal open={open} title="归档引探管" onClose={onClose}>
       <div className="space-y-3">
         <p className="text-sm text-slate-600">确定要归档 <span className="font-medium">{tubeName}</span> 吗？归档后将从冻存盒中移出。</p>
         <div>

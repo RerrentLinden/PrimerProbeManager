@@ -10,6 +10,7 @@ import SearchResultsPage from '@/pages/SearchResultsPage'
 import ImportPage from '@/pages/ImportPage'
 import ProjectListPage from '@/pages/ProjectListPage'
 import ProjectDetailPage from '@/pages/ProjectDetailPage'
+import TubeLifecycleLogsPage from '@/pages/TubeLifecycleLogsPage'
 
 function ProtectedRoutes() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/primers/:id" element={<PrimerDetailPage />} />
         <Route path="/storage" element={<StoragePage />} />
         <Route path="/search" element={<SearchResultsPage />} />
+        <Route path="/logs" element={<TubeLifecycleLogsPage />} />
         <Route path="/import" element={<ImportPage />} />
         <Route path="/projects" element={<ProjectListPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />

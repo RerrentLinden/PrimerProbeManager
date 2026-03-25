@@ -47,10 +47,7 @@ async def get_project(
     data = await project_service.get_project(session, project_id)
     if not data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Project not found")
-    data["primers"] = [
-        ProjectPrimerInfo(id=p.id, name=p.name, type=p.type)
-        for p in data.get("primers", [])
-    ]
+    data["primers"] = [ProjectPrimerInfo(**p) for p in data.get("primers", [])]
     return data
 
 

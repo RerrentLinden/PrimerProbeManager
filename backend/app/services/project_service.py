@@ -33,13 +33,20 @@ async def get_project(session: AsyncSession, project_id: int) -> dict | None:
         .options(
             selectinload(Project.primer_links)
             .selectinload(ProjectPrimer.primer),
+            selectinload(Project.primer_links)
+            .selectinload(ProjectPrimer.primer)
+            .selectinload(Primer.tubes),
             selectinload(Project.genes),
         )
     )
     project = (await session.execute(query)).scalar_one_or_none()
     if not project:
         return None
-    primers = [link.primer for link in project.primer_links if link.primer]
+    primers = [
+        _project_primer_dict(link.primer)
+        for link in project.primer_links
+        if link.primer
+    ]
     genes = sorted(project.genes, key=lambda g: g.sort_order)
     counts = await _get_counts(session, project.id)
     return {
@@ -71,6 +78,12 @@ async def update_project(
 
 
 async def delete_project(session: AsyncSession, project: Project) -> None:
+    counts = await _get_counts(session, project.id)
+    if counts["primer_count"] > 0:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail="项目仍有关联引物探针，请先解除关联后再删除",
+        )
     await session.delete(project)
     await session.commit()
 
@@ -214,4 +227,27 @@ def _project_dict(p: Project) -> dict:
         "description": p.description,
         "created_at": p.created_at,
         "updated_at": p.updated_at,
+    }
+
+
+def _project_primer_dict(primer: Primer) -> dict:
+    active_tubes = [tube for tube in primer.tubes if tube.status == "active"]
+    total_remaining = sum(tube.remaining_volume_ul for tube in active_tubes)
+    return {
+        "id": primer.id,
+        "name": primer.name,
+        "sequence": primer.sequence,
+        "base_count": primer.base_count,
+        "type": primer.type,
+        "modification_5prime": primer.modification_5prime,
+        "modification_3prime": primer.modification_3prime,
+        "mw": primer.mw,
+        "ug_per_od": primer.ug_per_od,
+        "nmol_per_od": primer.nmol_per_od,
+        "gc_percent": primer.gc_percent,
+        "tm": primer.tm,
+        "purification_method": primer.purification_method,
+        "active_tube_count": len(active_tubes),
+        "total_remaining_volume_ul": total_remaining,
+        "low_volume_alert_threshold_ul": primer.low_volume_alert_threshold_ul,
     }

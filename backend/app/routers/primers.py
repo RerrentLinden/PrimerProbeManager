@@ -115,7 +115,7 @@ async def delete_primer(
 
 
 def _to_response(p, proj_list: list[dict]) -> PrimerResponse:
-    active = sum(1 for t in p.tubes if t.status == "active") if p.tubes else 0
+    active_tubes = [tube for tube in p.tubes if tube.status == "active"] if p.tubes else []
     return PrimerResponse(
         id=p.id, name=p.name, sequence=p.sequence,
         base_count=p.base_count, type=p.type,
@@ -124,7 +124,11 @@ def _to_response(p, proj_list: list[dict]) -> PrimerResponse:
         mw=p.mw, ug_per_od=p.ug_per_od, nmol_per_od=p.nmol_per_od,
         gc_percent=p.gc_percent, tm=p.tm,
         purification_method=p.purification_method,
-        active_tube_count=active,
+        active_tube_count=len(active_tubes),
+        total_remaining_volume_ul=sum(
+            tube.remaining_volume_ul for tube in active_tubes
+        ),
+        low_volume_alert_threshold_ul=p.low_volume_alert_threshold_ul,
         projects=[PrimerProjectInfo(**pj) for pj in proj_list],
         created_at=p.created_at, updated_at=p.updated_at,
     )

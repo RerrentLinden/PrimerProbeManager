@@ -37,7 +37,6 @@ export default function EditPrimerModal({ open, primer, onClose, onSuccess }: Pr
         mw: form.mw ? Number(form.mw) : null,
         ug_per_od: form.ug_per_od ? Number(form.ug_per_od) : null,
         nmol_per_od: form.nmol_per_od ? Number(form.nmol_per_od) : null,
-        gc_percent: form.gc_percent ? Number(form.gc_percent) : null,
         tm: form.tm ? Number(form.tm) : null,
         purification_method: form.purification_method || null,
       })
@@ -63,13 +62,10 @@ export default function EditPrimerModal({ open, primer, onClose, onSuccess }: Pr
           <Field label="Tm (°C)" value={form.tm} onChange={(v) => set('tm', v)} type="number" />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="GC%" value={form.gc_percent} onChange={(v) => set('gc_percent', v)} type="number" />
           <Field label="ug/OD" value={form.ug_per_od} onChange={(v) => set('ug_per_od', v)} type="number" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
           <Field label="nmol/OD" value={form.nmol_per_od} onChange={(v) => set('nmol_per_od', v)} type="number" />
-          <Field label="纯化方式" value={form.purification_method} onChange={(v) => set('purification_method', v)} />
         </div>
+        <Field label="纯化方式" value={form.purification_method} onChange={(v) => set('purification_method', v)} />
 
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
@@ -136,7 +132,6 @@ function toForm(p: Primer) {
     mw: p.mw?.toString() ?? '',
     ug_per_od: p.ug_per_od?.toString() ?? '',
     nmol_per_od: p.nmol_per_od?.toString() ?? '',
-    gc_percent: p.gc_percent?.toString() ?? '',
     tm: p.tm?.toString() ?? '',
     purification_method: p.purification_method ?? '',
   }

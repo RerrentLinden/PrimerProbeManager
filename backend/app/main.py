@@ -10,6 +10,7 @@ import app.models  # noqa: F401 — ensure all models are registered
 
 from app.routers import (
     auth, primers, tubes, usage_logs, boxes, search, import_data, projects, stats,
+    tube_lifecycle_logs,
 )
 
 
@@ -25,6 +26,15 @@ def _migrate(conn) -> None:
         if "archive_reason" not in cols:
             conn.execute(text("ALTER TABLE primer_tubes ADD COLUMN archive_reason VARCHAR"))
 
+    if "primers" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("primers")}
+        if "low_volume_alert_threshold_ul" not in cols:
+            conn.execute(text(
+                "ALTER TABLE primers "
+                "ADD COLUMN low_volume_alert_threshold_ul FLOAT"
+            ))
+        _migrate_primer_identity_indexes(conn)
+
     if "project_primers" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("project_primers")}
         if "primer_id" not in cols:
@@ -39,6 +49,88 @@ def _migrate(conn) -> None:
             ))
             conn.execute(text("CREATE INDEX ix_project_primers_project_id ON project_primers(project_id)"))
             conn.execute(text("CREATE INDEX ix_project_primers_primer_id ON project_primers(primer_id)"))
+
+
+def _migrate_primer_identity_indexes(conn) -> None:
+    unique_indexes = _list_unique_indexes(conn, "primers")
+    has_composite_unique = any(columns == ["name", "mw"] for _, columns in unique_indexes)
+    name_only_indexes = [name for name, columns in unique_indexes if columns == ["name"]]
+
+    if has_composite_unique and not name_only_indexes:
+        return
+
+    if _drop_name_only_unique_indexes(conn, name_only_indexes):
+        conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_primers_name ON primers(name)")
+        conn.exec_driver_sql(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_primer_name_mw ON primers(name, mw)"
+        )
+        return
+
+    _rebuild_primers_table(conn)
+
+
+def _drop_name_only_unique_indexes(conn, index_names: list[str]) -> bool:
+    for index_name in index_names:
+        if index_name.startswith("sqlite_autoindex"):
+            return False
+        quoted_name = index_name.replace('"', '""')
+        conn.exec_driver_sql(f'DROP INDEX "{quoted_name}"')
+    return True
+
+
+def _list_unique_indexes(conn, table_name: str) -> list[tuple[str, list[str]]]:
+    indexes = conn.exec_driver_sql(f"PRAGMA index_list('{table_name}')").mappings().all()
+    unique_indexes: list[tuple[str, list[str]]] = []
+    for index in indexes:
+        if not index["unique"]:
+            continue
+        columns = conn.exec_driver_sql(
+            f"PRAGMA index_info('{index['name']}')"
+        ).mappings().all()
+        unique_indexes.append((index["name"], [column["name"] for column in columns]))
+    return unique_indexes
+
+
+def _rebuild_primers_table(conn) -> None:
+    conn.exec_driver_sql("PRAGMA foreign_keys=OFF")
+    conn.exec_driver_sql("PRAGMA legacy_alter_table=ON")
+    conn.exec_driver_sql("ALTER TABLE primers RENAME TO primers_old")
+    conn.exec_driver_sql(
+        "CREATE TABLE primers ("
+        "id INTEGER NOT NULL PRIMARY KEY,"
+        "name VARCHAR NOT NULL,"
+        "sequence VARCHAR NOT NULL,"
+        "base_count INTEGER NOT NULL,"
+        "modification_5prime VARCHAR,"
+        "modification_3prime VARCHAR,"
+        "mw FLOAT,"
+        "ug_per_od FLOAT,"
+        "nmol_per_od FLOAT,"
+        "gc_percent FLOAT,"
+        "tm FLOAT,"
+        "purification_method VARCHAR,"
+        "low_volume_alert_threshold_ul FLOAT,"
+        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+        "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+        "CONSTRAINT uq_primer_name_mw UNIQUE (name, mw)"
+        ")"
+    )
+    conn.exec_driver_sql(
+        "INSERT INTO primers ("
+        "id, name, sequence, base_count, modification_5prime, modification_3prime, "
+        "mw, ug_per_od, nmol_per_od, gc_percent, tm, purification_method, "
+        "low_volume_alert_threshold_ul, created_at, updated_at"
+        ") "
+        "SELECT "
+        "id, name, sequence, base_count, modification_5prime, modification_3prime, "
+        "mw, ug_per_od, nmol_per_od, gc_percent, tm, purification_method, "
+        "low_volume_alert_threshold_ul, created_at, updated_at "
+        "FROM primers_old"
+    )
+    conn.exec_driver_sql("CREATE INDEX ix_primers_name ON primers(name)")
+    conn.exec_driver_sql("DROP TABLE primers_old")
+    conn.exec_driver_sql("PRAGMA legacy_alter_table=OFF")
+    conn.exec_driver_sql("PRAGMA foreign_keys=ON")
 
 
 @asynccontextmanager
@@ -69,3 +161,4 @@ app.include_router(search.router)
 app.include_router(import_data.router)
 app.include_router(projects.router)
 app.include_router(stats.router)
+app.include_router(tube_lifecycle_logs.router)

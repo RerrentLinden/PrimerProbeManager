@@ -142,13 +142,6 @@ export default function BoxGrid({ box, grid, searchHighlight, onEmptySlotClick, 
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">{box.name}</h2>
-          <p className="text-xs text-slate-500">{box.storage_location ?? ''} {box.storage_temperature ?? ''}</p>
-        </div>
-      </div>
-
       {drag && (
         <div className="mb-3 flex items-center gap-2 text-xs bg-blue-50 text-blue-700 rounded-lg px-3 py-1.5">
           <svg className="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">

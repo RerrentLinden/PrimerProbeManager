@@ -1,4 +1,6 @@
+from fastapi import HTTPException, status
 from sqlalchemy import select, func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -8,12 +10,7 @@ from app.models.box_position import BoxPosition
 from app.models.project import Project
 from app.models.project_primer import ProjectPrimer
 from app.schemas.primer import PrimerCreate, PrimerUpdate
-
-SEQUENCE_CHARS = frozenset("ATCGatcg")
-
-
-def _count_bases(sequence: str) -> int:
-    return sum(1 for c in sequence if c.upper() in SEQUENCE_CHARS)
+from app.services.primer_metrics import calculate_gc_percent, count_bases
 
 
 async def list_primers(
@@ -124,29 +121,106 @@ async def get_primer(session: AsyncSession, primer_id: int) -> Primer | None:
 
 
 async def create_primer(session: AsyncSession, data: PrimerCreate) -> Primer:
-    primer = Primer(
-        **data.model_dump(),
-        base_count=_count_bases(data.sequence),
-    )
+    payload = _build_create_payload(data)
+    await _ensure_unique_identity(session, name=payload["name"], mw=payload["mw"])
+    primer = Primer(**payload)
     session.add(primer)
-    await session.commit()
-    await session.refresh(primer)
-    return primer
+    await _commit_primer(session)
+    loaded_primer = await get_primer(session, primer.id)
+    if loaded_primer is None:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Primer created but could not be reloaded",
+        )
+    return loaded_primer
 
 
 async def update_primer(
     session: AsyncSession, primer: Primer, data: PrimerUpdate,
 ) -> Primer:
-    updates = data.model_dump(exclude_unset=True)
+    updates = _prepare_updates(primer, data)
+    await _ensure_unique_identity(
+        session,
+        name=updates.get("name", primer.name),
+        mw=updates.get("mw", primer.mw),
+        exclude_id=primer.id,
+    )
     for key, value in updates.items():
         setattr(primer, key, value)
-    if "sequence" in updates:
-        primer.base_count = _count_bases(updates["sequence"])
-    await session.commit()
-    await session.refresh(primer)
-    return primer
+    await _commit_primer(session)
+    loaded_primer = await get_primer(session, primer.id)
+    if loaded_primer is None:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Primer updated but could not be reloaded",
+        )
+    return loaded_primer
 
 
 async def delete_primer(session: AsyncSession, primer: Primer) -> None:
     await session.delete(primer)
     await session.commit()
+
+
+def _build_create_payload(data: PrimerCreate) -> dict:
+    payload = data.model_dump()
+    payload["name"] = payload["name"].strip()
+    payload["sequence"] = payload["sequence"].strip()
+    payload["base_count"] = count_bases(payload["sequence"])
+    payload["gc_percent"] = calculate_gc_percent(payload["sequence"])
+    return payload
+
+
+def _prepare_updates(primer: Primer, data: PrimerUpdate) -> dict:
+    updates = data.model_dump(exclude_unset=True)
+    if "name" in updates:
+        updates["name"] = updates["name"].strip()
+    next_sequence = primer.sequence
+    if "sequence" in updates:
+        next_sequence = updates["sequence"].strip()
+        updates["sequence"] = next_sequence
+    updates["base_count"] = count_bases(next_sequence)
+    updates["gc_percent"] = calculate_gc_percent(next_sequence)
+    return updates
+
+
+async def _ensure_unique_identity(
+    session: AsyncSession,
+    *,
+    name: str,
+    mw: float | None,
+    exclude_id: int | None = None,
+) -> None:
+    query = select(Primer.id).where(Primer.name == name, _mw_equals(mw))
+    if exclude_id is not None:
+        query = query.where(Primer.id != exclude_id)
+    existing_id = (await session.execute(query)).scalar_one_or_none()
+    if existing_id is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail="同名且 MW 相同的引探已存在",
+        )
+
+
+def _mw_equals(mw: float | None):
+    if mw is None:
+        return Primer.mw.is_(None)
+    return Primer.mw == mw
+
+
+async def _commit_primer(session: AsyncSession) -> None:
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        if _is_identity_conflict(exc):
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail="同名且 MW 相同的引探已存在",
+            ) from exc
+        raise
+
+
+def _is_identity_conflict(error: IntegrityError) -> bool:
+    message = str(error.orig)
+    return "UNIQUE constraint failed: primers.name" in message

@@ -5,14 +5,15 @@ from pydantic import BaseModel, Field
 class PrimerCreate(BaseModel):
     name: str
     sequence: str
-    modification_5prime: str | None = None
-    modification_3prime: str | None = None
-    mw: float | None = None
+    modification_5prime: str | None
+    modification_3prime: str | None
+    mw: float
     ug_per_od: float | None = None
     nmol_per_od: float | None = None
     gc_percent: float | None = None
-    tm: float | None = None
+    tm: float
     purification_method: str | None = None
+    low_volume_alert_threshold_ul: float | None = None
 
 
 class PrimerUpdate(BaseModel):
@@ -26,6 +27,7 @@ class PrimerUpdate(BaseModel):
     gc_percent: float | None = None
     tm: float | None = None
     purification_method: str | None = None
+    low_volume_alert_threshold_ul: float | None = None
 
 
 class PrimerProjectInfo(BaseModel):
@@ -48,6 +50,8 @@ class PrimerResponse(BaseModel):
     tm: float | None
     purification_method: str | None
     active_tube_count: int = 0
+    total_remaining_volume_ul: float = 0
+    low_volume_alert_threshold_ul: float | None = None
     projects: list[PrimerProjectInfo] = []
     created_at: datetime
     updated_at: datetime

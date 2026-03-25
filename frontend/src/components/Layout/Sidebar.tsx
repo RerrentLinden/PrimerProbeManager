@@ -2,9 +2,10 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useState, useCallback } from 'react'
 
 const NAV_ITEMS = [
-  { path: '/primers', label: '引物列表', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-  { path: '/storage', label: '位置管理', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-  { path: '/projects', label: '项目', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
+  { path: '/primers', label: '引探管理', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+  { path: '/storage', label: '存放管理', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+  { path: '/projects', label: '项目管理', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
+  { path: '/logs', label: '日志记录', icon: 'M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z' },
   { path: '/import', label: '导入', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' },
 ] as const
 
@@ -26,9 +27,10 @@ export default function Sidebar() {
     <aside className="w-60 h-screen sticky top-0 bg-lab-surface text-lab-text flex flex-col border-r border-lab-border">
       <div className="p-5">
         <h1 className="text-lg font-bold tracking-tight">
-          <span className="text-lab-accent">Primer</span>Manager
+          <span className="text-lab-accent">PP</span>Manager
         </h1>
-        <p className="text-xs text-lab-muted mt-0.5">引物探针管理系统</p>
+        <p className="text-[11px] font-semibold tracking-[0.16em] text-lab-muted/85 mt-1">PrimerProbeManager</p>
+        <p className="text-xs text-lab-muted mt-0.5">引探管理系统</p>
       </div>
 
       <div className="px-4 mb-4">
@@ -41,7 +43,7 @@ export default function Sidebar() {
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={handleSearch}
-            placeholder="全局搜索..."
+            placeholder="全局搜索"
             className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-lab-bg text-sm text-lab-text placeholder:text-lab-muted border border-lab-border focus:outline-none focus:border-lab-accent"
           />
         </div>

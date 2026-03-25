@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { ProjectGene } from '@/types'
 import { createProjectGene, updateProjectGene, deleteProjectGene } from '@/api/projects'
 import Modal from '@/components/common/Modal'
@@ -104,7 +104,6 @@ function GeneGrid({ channels, tubeNumbers, getGene, onCellClick, onDelete }: {
                           type="button"
                           onClick={() => onCellClick(gene)}
                           className="text-sm hover:text-blue-600"
-                          title={gene.function_note ?? ''}
                         >
                           {gene.gene_name}
                         </button>
@@ -132,22 +131,20 @@ function GeneEditModal({ open, projectId, gene, onClose, onSuccess }: {
   readonly onSuccess: () => void
 }) {
   const [name, setName] = useState(gene?.gene_name ?? '')
-  const [note, setNote] = useState(gene?.function_note ?? '')
   const [submitting, setSubmitting] = useState(false)
 
-  // Sync state when gene changes
-  useState(() => {
-    if (gene) { setName(gene.gene_name); setNote(gene.function_note ?? '') }
-  })
+  useEffect(() => {
+    setName(gene?.gene_name ?? '')
+  }, [gene])
 
   const handleSubmit = useCallback(async () => {
     if (!gene) return
     setSubmitting(true)
-    await updateProjectGene(projectId, gene.id, { gene_name: name, function_note: note || undefined })
+    await updateProjectGene(projectId, gene.id, { gene_name: name })
     onSuccess()
     onClose()
     setSubmitting(false)
-  }, [projectId, gene, name, note, onSuccess, onClose])
+  }, [projectId, gene, name, onSuccess, onClose])
 
   return (
     <Modal open={open} title="编辑基因" onClose={onClose}>
@@ -155,10 +152,6 @@ function GeneEditModal({ open, projectId, gene, onClose, onSuccess }: {
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">基因名称</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">功能备注</label>
-          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="input-field" />
         </div>
         <div className="flex justify-end gap-3">
           <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
@@ -178,7 +171,6 @@ function GeneAddModal({ open, projectId, onClose, onSuccess }: {
   const [name, setName] = useState('')
   const [channel, setChannel] = useState('')
   const [tubeNum, setTubeNum] = useState('')
-  const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = useCallback(async () => {
@@ -188,13 +180,12 @@ function GeneAddModal({ open, projectId, onClose, onSuccess }: {
       gene_name: name,
       fluorescence_channel: channel || undefined,
       tube_number: tubeNum ? parseInt(tubeNum) : undefined,
-      function_note: note || undefined,
     })
-    setName(''); setChannel(''); setTubeNum(''); setNote('')
+    setName(''); setChannel(''); setTubeNum('')
     onSuccess()
     onClose()
     setSubmitting(false)
-  }, [projectId, name, channel, tubeNum, note, onSuccess, onClose])
+  }, [projectId, name, channel, tubeNum, onSuccess, onClose])
 
   return (
     <Modal open={open} title="添加基因" onClose={onClose}>
@@ -210,10 +201,6 @@ function GeneAddModal({ open, projectId, onClose, onSuccess }: {
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">管号</label>
           <input type="number" value={tubeNum} onChange={(e) => setTubeNum(e.target.value)} className="input-field" placeholder="如: 1, 2, 3" min="1" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">功能备注</label>
-          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="input-field" />
         </div>
         <div className="flex justify-end gap-3">
           <button type="button" className="btn-secondary" onClick={onClose}>取消</button>

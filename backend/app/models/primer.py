@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Float, Integer, DateTime, func
+from sqlalchemy import String, Float, Integer, DateTime, UniqueConstraint, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,9 +12,12 @@ def _utcnow() -> datetime:
 
 class Primer(Base):
     __tablename__ = "primers"
+    __table_args__ = (
+        UniqueConstraint("name", "mw", name="uq_primer_name_mw"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String, index=True)
     sequence: Mapped[str] = mapped_column(String)
     base_count: Mapped[int] = mapped_column(Integer)
     modification_5prime: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -25,6 +28,9 @@ class Primer(Base):
     gc_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
     tm: Mapped[float | None] = mapped_column(Float, nullable=True)
     purification_method: Mapped[str | None] = mapped_column(String, nullable=True)
+    low_volume_alert_threshold_ul: Mapped[float | None] = mapped_column(
+        Float, nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(),
     )

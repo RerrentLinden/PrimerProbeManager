@@ -10,6 +10,7 @@ from app.models.primer import Primer
 from app.schemas.box import (
     BoxCreate, BoxUpdate, SlotTubeInfo, GridSlot, BoxMoveRequest,
 )
+from app.services import tube_lifecycle_log_service
 
 
 async def list_boxes(
@@ -96,8 +97,20 @@ async def place_tube(
 ) -> BoxPosition:
     await _validate_position(session, box_id, row, col)
     await _check_target_free(session, box_id, row, col)
+    tube = await _get_tube_with_primer(session, tube_id)
+    to_position = await tube_lifecycle_log_service.get_target_position_label(
+        session, box_id, row, col,
+    )
     pos = BoxPosition(box_id=box_id, row=row, col=col, tube_id=tube_id)
     session.add(pos)
+    tube_lifecycle_log_service.stage_position_log(
+        session,
+        tube=tube,
+        primer_name=tube.primer.name,
+        primer_type=tube.primer.type,
+        from_position=None,
+        to_position=to_position,
+    )
     await session.commit()
     await session.refresh(pos)
     return pos
@@ -128,6 +141,13 @@ async def move_within_box(
     target_box = data.to_box_id or box_id
     await _validate_position(session, target_box, data.to_row, data.to_col)
     await _check_target_free(session, target_box, data.to_row, data.to_col)
+    tube = await _get_tube_with_primer(session, source.tube_id)
+    from_position = await tube_lifecycle_log_service.get_target_position_label(
+        session, box_id, data.from_row, data.from_col,
+    )
+    to_position = await tube_lifecycle_log_service.get_target_position_label(
+        session, target_box, data.to_row, data.to_col,
+    )
 
     tube_id = source.tube_id
     await session.delete(source)
@@ -137,6 +157,14 @@ async def move_within_box(
         box_id=target_box, row=data.to_row, col=data.to_col, tube_id=tube_id,
     )
     session.add(new_pos)
+    tube_lifecycle_log_service.stage_position_log(
+        session,
+        tube=tube,
+        primer_name=tube.primer.name,
+        primer_type=tube.primer.type,
+        from_position=from_position,
+        to_position=to_position,
+    )
     await session.commit()
 
 
@@ -200,3 +228,18 @@ def _box_to_dict(box: FreezerBox, occupied: int) -> dict:
         "created_at": box.created_at,
         "updated_at": box.updated_at,
     }
+
+
+async def _get_tube_with_primer(
+    session: AsyncSession, tube_id: int,
+) -> PrimerTube:
+    tube = (
+        await session.execute(
+            select(PrimerTube)
+            .where(PrimerTube.id == tube_id)
+            .options(selectinload(PrimerTube.primer))
+        )
+    ).scalar_one_or_none()
+    if tube is None or tube.primer is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Tube not found")
+    return tube

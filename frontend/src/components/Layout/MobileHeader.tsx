@@ -31,7 +31,7 @@ export default function MobileHeader() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onBlur={() => !query && setShowSearch(false)}
-            placeholder="搜索..."
+            placeholder="全局搜索"
             className="w-full px-3 py-1 rounded bg-lab-bg text-sm text-lab-text border border-lab-border focus:outline-none"
           />
         </form>

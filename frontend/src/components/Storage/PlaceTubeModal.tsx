@@ -47,13 +47,13 @@ export default function PlaceTubeModal({ open, boxId, row, col, onClose, onSucce
   }, [boxId, row, col, onSuccess, onClose])
 
   return (
-    <Modal open={open} title={`放置引物管 - ${positionLabel(row, col)}`} onClose={onClose}>
+    <Modal open={open} title={`放置引探管 - ${positionLabel(row, col)}`} onClose={onClose}>
       <div className="space-y-4">
         <input
           type="text"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setSelectedPrimerId(null) }}
-          placeholder="搜索引物..."
+          placeholder="搜索引探..."
           className="input-field"
         />
 
@@ -76,7 +76,7 @@ export default function PlaceTubeModal({ open, boxId, row, col, onClose, onSucce
         )}
 
         {selectedPrimerId && tubes.length === 0 && (
-          <p className="text-sm text-slate-500 py-4 text-center">该引物无可用的未放置管</p>
+          <p className="text-sm text-slate-500 py-4 text-center">该引探无可用的未放置管</p>
         )}
 
         {selectedPrimerId && tubes.length > 0 && (

@@ -37,9 +37,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-lab-text">
-            <span className="text-lab-accent">Primer</span>Manager
+            <span className="text-lab-accent">PP</span>Manager
           </h1>
-          <p className="text-sm text-lab-muted mt-1">引物探针管理系统</p>
+          <p className="text-xs font-semibold tracking-[0.18em] text-lab-muted/85 mt-2">PrimerProbeManager</p>
+          <p className="text-sm text-lab-muted mt-1">引探管理系统</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">

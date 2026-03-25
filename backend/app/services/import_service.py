@@ -1,7 +1,8 @@
 import io
+from collections import Counter
 from datetime import date, datetime
 
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile, status
 from openpyxl import Workbook, load_workbook
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,14 +15,14 @@ from app.schemas.import_data import (
     ImportPreviewResponse,
     ImportConfirmResponse,
 )
+from app.services.primer_metrics import calculate_gc_percent, count_bases
+from app.services import tube_lifecycle_log_service
 
 PRIMER_HEADERS = [
     "名称", "序列(5'→3')", "5'修饰", "3'修饰",
     "MW", "ug/OD", "nmol/OD", "GC%", "Tm", "纯化方式",
 ]
 TUBE_HEADERS = ["引物名称", "批号", "定容日期", "产量(μL)", "项目"]
-
-SEQUENCE_CHARS = frozenset("ATCGatcg")
 
 
 def generate_template() -> bytes:
@@ -124,11 +125,11 @@ async def _preview_primers(
 ) -> list[PrimerPreviewRow]:
     results = []
     for r in rows:
-        existing = await _find_primer(session, r["name"])
+        existing = await _find_primer_by_identity(session, r["name"], r["mw"])
         if existing and existing.sequence == r["sequence"]:
             action, msg = "update", "已存在，将更新其他字段"
         elif existing:
-            action, msg = "conflict", f"同名但序列不同(库中: {existing.sequence[:20]}...)"
+            action, msg = "conflict", f"同名同 MW 但序列不同(库中: {existing.sequence[:20]}...)"
         else:
             action, msg = "create", "新增"
         results.append(PrimerPreviewRow(**r, action=action, message=msg))
@@ -140,13 +141,17 @@ async def _preview_tubes(
 ) -> list[TubePreviewRow]:
     results = []
     known_names = {r["name"] for r in primer_rows}
+    known_name_counts = Counter(r["name"] for r in primer_rows)
     for r in rows:
-        exists_in_db = await _find_primer(session, r["primer_name"])
-        if not exists_in_db and r["primer_name"] not in known_names:
-            action, msg = "error", "引物不存在且未在Sheet1中定义"
+        db_matches = await _find_primers_by_name(session, r["primer_name"])
+        if not db_matches and r["primer_name"] not in known_names:
+            action, msg = "error", "引探不存在且未在 Sheet1 中定义"
+        elif len(db_matches) > 1 or known_name_counts[r["primer_name"]] > 1:
+            action, msg = "error", "同名引探存在多个 MW，当前模板无法匹配"
         else:
+            primer_id = db_matches[0].id if db_matches else None
             existing_tube = await _find_tube(
-                session, r["primer_name"], r["batch_number"],
+                session, primer_id, r["batch_number"],
             )
             if existing_tube:
                 action, msg = "update", "同批号已存在，将更新产量"
@@ -166,14 +171,13 @@ async def _import_primers(
 ) -> tuple[int, int]:
     created = updated = 0
     for r in rows:
-        existing = await _find_primer(session, r["name"])
+        existing = await _find_primer_by_identity(session, r["name"], r["mw"])
         if existing:
             if existing.sequence == r["sequence"]:
                 _apply_primer_fields(existing, r)
                 updated += 1
         else:
-            base_count = sum(1 for c in r["sequence"] if c.upper() in SEQUENCE_CHARS)
-            primer = Primer(base_count=base_count, **r)
+            primer = Primer(**_build_primer_payload(r))
             session.add(primer)
             created += 1
     await session.flush()
@@ -185,10 +189,19 @@ async def _import_tubes(
 ) -> tuple[int, int]:
     created = updated = 0
     for r in rows:
-        primer = await _find_primer(session, r["primer_name"])
-        if not primer:
+        primers = await _find_primers_by_name(session, r["primer_name"])
+        if not primers:
             continue
-        existing = await _find_tube(session, r["primer_name"], r["batch_number"])
+        if len(primers) > 1:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail=(
+                    f"导入失败：{r['primer_name']} 存在多个同名引探，"
+                    "当前模板无法区分 MW"
+                ),
+            )
+        primer = primers[0]
+        existing = await _find_tube(session, primer.id, r["batch_number"])
         if existing:
             existing.initial_volume_ul = r["initial_volume_ul"]
             existing.remaining_volume_ul = r["initial_volume_ul"]
@@ -207,6 +220,10 @@ async def _import_tubes(
                 project=r["project"],
             )
             session.add(tube)
+            await session.flush()
+            tube_lifecycle_log_service.stage_created_log(
+                session, tube=tube, primer_name=primer.name, primer_type=primer.type,
+            )
             created += 1
     await session.flush()
     return created, updated
@@ -217,27 +234,43 @@ def _apply_primer_fields(primer: Primer, data: dict) -> None:
     for key, val in data.items():
         if key not in skip and val is not None:
             setattr(primer, key, val)
+    primer.base_count = count_bases(primer.sequence)
+    primer.gc_percent = calculate_gc_percent(primer.sequence)
 
 
-async def _find_primer(
-    session: AsyncSession, name: str,
+async def _find_primer_by_identity(
+    session: AsyncSession, name: str, mw: float | None,
 ) -> Primer | None:
+    query = select(Primer).where(Primer.name == name)
+    if mw is None:
+        query = query.where(Primer.mw.is_(None))
+    else:
+        query = query.where(Primer.mw == mw)
     return (
-        await session.execute(
-            select(Primer).where(Primer.name == name)
-        )
+        await session.execute(query)
     ).scalar_one_or_none()
 
 
 async def _find_tube(
-    session: AsyncSession, primer_name: str, batch: str,
+    session: AsyncSession, primer_id: int | None, batch: str,
 ) -> PrimerTube | None:
+    if primer_id is None:
+        return None
     query = (
         select(PrimerTube)
-        .join(PrimerTube.primer)
-        .where(Primer.name == primer_name, PrimerTube.batch_number == batch)
+        .where(PrimerTube.primer_id == primer_id, PrimerTube.batch_number == batch)
     )
     return (await session.execute(query)).scalar_one_or_none()
+
+
+async def _find_primers_by_name(
+    session: AsyncSession, name: str,
+) -> list[Primer]:
+    return list((
+        await session.execute(
+            select(Primer).where(Primer.name == name).order_by(Primer.id.desc())
+        )
+    ).scalars().all())
 
 
 def _str_or_none(row: tuple, idx: int) -> str | None:
@@ -277,3 +310,10 @@ def _normalize_gc(val: float | None) -> float | None:
     if val > 1:
         return val / 100.0
     return val
+
+
+def _build_primer_payload(row: dict) -> dict:
+    payload = {**row}
+    payload["base_count"] = count_bases(payload["sequence"])
+    payload["gc_percent"] = calculate_gc_percent(payload["sequence"])
+    return payload

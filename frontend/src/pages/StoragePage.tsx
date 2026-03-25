@@ -157,10 +157,14 @@ export default function StoragePage() {
 
       <div className="flex-1 card p-4">
         {!selectedBox || !grid ? (
-          <EmptyState title="选择一个盒子" description="从左侧列表选择或新建盒子" />
+          <EmptyState title="选择一个盒子" description="从左侧列表选择或新冻存盒" />
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-col gap-3 mb-4 xl:flex-row xl:items-center">
+              <div className="shrink-0 xl:min-w-[180px]">
+                <h2 className="text-lg font-semibold leading-none">{selectedBox.name}</h2>
+                <p className="text-xs text-slate-500 mt-2">{selectedBox.storage_location ?? ''} {selectedBox.storage_temperature ?? ''}</p>
+              </div>
               <div ref={searchPanelRef} className="relative flex-1">
                 <input
                   type="text"
@@ -195,7 +199,7 @@ export default function StoragePage() {
                   </div>
                 )}
               </div>
-              <button type="button" className="btn-secondary text-xs py-1 px-2.5 shrink-0" onClick={() => setEditingBox(true)}>编辑盒子</button>
+              <button type="button" className="btn-secondary text-xs py-1 px-2.5 shrink-0 self-start xl:self-auto" onClick={() => setEditingBox(true)}>编辑</button>
             </div>
             <BoxGrid
               box={selectedBox}
@@ -231,7 +235,7 @@ export default function StoragePage() {
       <MoveTargetModal open={moveTubeIdCrossBox !== null} tubeId={moveTubeIdCrossBox} onClose={() => setMoveTubeIdCrossBox(null)} onSuccess={refresh} />
 
       {/* Archive */}
-      <Modal open={archiveTubeId !== null} title="归档引物管" onClose={() => setArchiveTubeId(null)}>
+      <Modal open={archiveTubeId !== null} title="归档引探管" onClose={() => setArchiveTubeId(null)}>
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">归档原因 *</label>
@@ -278,7 +282,7 @@ function MobileBoxSelector({ boxes, selectedId, onSelect, onCreateBox }: {
       <select className="input-field flex-1" value={selectedId ?? ''} onChange={(e) => onSelect(Number(e.target.value))}>
         {boxes.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
       </select>
-      <button type="button" className="btn-primary text-sm shrink-0" onClick={onCreateBox}>新建</button>
+      <button type="button" className="btn-primary text-sm shrink-0" onClick={onCreateBox}>新冻存盒</button>
     </div>
   )
 }

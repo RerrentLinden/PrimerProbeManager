@@ -14,6 +14,8 @@ export interface Primer {
   readonly tm: number | null
   readonly purification_method: string | null
   readonly active_tube_count?: number
+  readonly total_remaining_volume_ul?: number
+  readonly low_volume_alert_threshold_ul?: number | null
   readonly projects?: { id: number; name: string }[]
   readonly created_at: string
   readonly updated_at: string
@@ -22,14 +24,34 @@ export interface Primer {
 export interface PrimerCreate {
   readonly name: string
   readonly sequence: string
-  readonly modification_5prime?: string | null
-  readonly modification_3prime?: string | null
-  readonly mw?: number | null
+  readonly modification_5prime: string | null
+  readonly modification_3prime: string | null
+  readonly mw: number | null
   readonly ug_per_od?: number | null
   readonly nmol_per_od?: number | null
   readonly gc_percent?: number | null
-  readonly tm?: number | null
+  readonly tm: number | null
   readonly purification_method?: string | null
+  readonly low_volume_alert_threshold_ul?: number | null
+}
+
+export interface ProjectPrimer {
+  readonly id: number
+  readonly name: string
+  readonly sequence: string
+  readonly base_count: number
+  readonly type: 'primer' | 'probe'
+  readonly modification_5prime: string | null
+  readonly modification_3prime: string | null
+  readonly mw: number | null
+  readonly ug_per_od: number | null
+  readonly nmol_per_od: number | null
+  readonly gc_percent: number | null
+  readonly tm: number | null
+  readonly purification_method: string | null
+  readonly active_tube_count: number
+  readonly total_remaining_volume_ul: number
+  readonly low_volume_alert_threshold_ul: number | null
 }
 
 // --- Tube ---
@@ -85,6 +107,33 @@ export interface UsageLogCreate {
   readonly project?: string | null
 }
 
+export interface TubeLifecycleLog {
+  readonly id: number
+  readonly tube_id: number
+  readonly primer_id: number
+  readonly primer_name: string
+  readonly primer_type: 'primer' | 'probe'
+  readonly batch_number: string
+  readonly tube_number: string | null
+  readonly action: 'created' | 'placed' | 'moved' | 'used' | 'archived'
+  readonly title: string
+  readonly description: string
+  readonly from_position: string | null
+  readonly to_position: string | null
+  readonly volume_used_ul: number | null
+  readonly remaining_volume_ul: number | null
+  readonly purpose: string | null
+  readonly project_name: string | null
+  readonly archive_reason: string | null
+  readonly created_at: string
+}
+
+export interface TubeLifecycleLogFilter {
+  readonly preset?: '24h' | '7d' | '30d'
+  readonly start_date?: string
+  readonly end_date?: string
+}
+
 // --- Freezer Box ---
 export interface FreezerBox {
   readonly id: number
@@ -132,7 +181,7 @@ export interface Project {
   readonly updated_at: string
   readonly primer_count?: number
   readonly gene_count?: number
-  readonly primers?: { id: number; name: string; type: string }[]
+  readonly primers?: ProjectPrimer[]
   readonly genes?: ProjectGene[]
 }
 
@@ -147,7 +196,6 @@ export interface ProjectGene {
   readonly gene_name: string
   readonly tube_number: number | null
   readonly fluorescence_channel: string | null
-  readonly function_note: string | null
   readonly sort_order: number
 }
 
@@ -155,14 +203,6 @@ export interface ProjectGeneCreate {
   readonly gene_name: string
   readonly tube_number?: number | null
   readonly fluorescence_channel?: string | null
-  readonly function_note?: string | null
-}
-
-// --- Search ---
-export interface SearchResults {
-  readonly primers: Primer[]
-  readonly tubes: PrimerTube[]
-  readonly boxes: FreezerBox[]
 }
 
 // --- Import ---

@@ -46,7 +46,7 @@ export default function PrimerDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link to="/primers" className="hover:text-blue-600">引物列表</Link>
+        <Link to="/primers" className="hover:text-blue-600">引探管理</Link>
         <span>/</span>
         <span className="text-slate-800">{primer.name}</span>
       </div>
@@ -56,7 +56,7 @@ export default function PrimerDetailPage() {
       <ProjectSection primerId={primerId} projects={primer.projects ?? []} onRefresh={loadData} />
 
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">管列表 ({tubes.length})</h2>
+        <h2 className="text-lg font-semibold">分管列表 ({tubes.length})</h2>
         <button type="button" className="btn-primary text-sm" onClick={() => setShowAddTube(true)}>
           添加新管
         </button>

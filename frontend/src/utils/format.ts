@@ -24,6 +24,13 @@ export function formatDate(dateStr: string | null): string {
   return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
+export function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN', {
+    hour12: false,
+  })
+}
+
 export function rowLabel(row: number): string {
   return ROW_LABELS[row] ?? String(row)
 }
