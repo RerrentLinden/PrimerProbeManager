@@ -155,13 +155,38 @@ function DateField({
   readonly value: string
   readonly onChange: (value: string) => void
 }) {
+  // Display as MM/DD/YYYY, store as YYYY-MM-DD
+  const display = toDisplay(value)
+
+  function toDisplay(iso: string): string {
+    if (!iso) return ''
+    const [y, m, d] = iso.split('-')
+    return `${m}/${d}/${y}`
+  }
+
+  function toISO(input: string): string {
+    const cleaned = input.replace(/[^0-9/]/g, '')
+    const parts = cleaned.split('/')
+    if (parts.length === 3 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`
+    }
+    return ''
+  }
+
+  function handleInput(raw: string) {
+    const iso = toISO(raw)
+    if (iso) onChange(iso)
+    else if (!raw) onChange('')
+  }
+
   return (
     <div>
       <label className="block text-xs font-medium text-lab-muted mb-1">{label}</label>
       <input
-        type="date"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+        type="text"
+        value={display}
+        onChange={(e) => handleInput(e.target.value)}
+        placeholder="MM/DD/YYYY"
         className="input-field"
       />
     </div>
