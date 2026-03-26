@@ -18,7 +18,7 @@ export default function CreateBoxModal({ open, onClose, onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = useCallback(async () => {
-    if (!name) return
+    if (!name.trim()) return
     setSubmitting(true)
     try {
       await createBox({
@@ -62,7 +62,7 @@ export default function CreateBoxModal({ open, onClose, onSuccess }: Props) {
         </div>
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
-          <button type="button" className="btn-primary" disabled={!name || submitting} onClick={handleSubmit}>
+          <button type="button" className="btn-primary" disabled={!name.trim() || submitting} onClick={handleSubmit}>
             {submitting ? '创建中...' : '创建'}
           </button>
         </div>
