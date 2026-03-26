@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+
+# Node
+node_modules/
+dist/
+
+# Data
+*.db
+data/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Playwright
+.playwright-mcp/
+
+# Claude
+.claude/
+
+# Task tracking (local only)
+.codex-tasks/
+
+# Screenshots (local verification)
+screenshots/
+
+# Temp scripts
+main.mjs
+starter.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local files
+*.xlsx
+tsconfig.tsbuildinfo
