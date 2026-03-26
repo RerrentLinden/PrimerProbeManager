@@ -11,7 +11,7 @@ class PrimerCreate(BaseModel):
     ug_per_od: float | None = None
     nmol_per_od: float | None = None
     gc_percent: float | None = None
-    tm: float
+    tm: float | None = None
     purification_method: str | None = None
     low_volume_alert_threshold_ul: float | None = None
 

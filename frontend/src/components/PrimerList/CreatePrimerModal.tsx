@@ -227,5 +227,8 @@ function toOptionalString(value: string): string | null {
 }
 
 function extractError(err: unknown, fallback: string): string {
-  return (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? fallback
+  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) return detail.map((d: { msg?: string }) => d.msg ?? '').filter(Boolean).join('; ') || fallback
+  return fallback
 }
