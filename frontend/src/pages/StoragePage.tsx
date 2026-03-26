@@ -285,6 +285,7 @@ function MobileBoxSelector({ boxes, selectedId, onSelect, onCreateBox }: {
             <button
               key={b.id}
               type="button"
+              data-box-id={b.id}
               onClick={() => onSelect(b.id)}
               className={`shrink-0 px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 b.id === selectedId

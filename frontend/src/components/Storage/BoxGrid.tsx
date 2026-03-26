@@ -147,7 +147,7 @@ export default function BoxGrid({ box, grid, searchHighlight, onEmptySlotClick, 
           <svg className="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
-          拖动到空位放置，或拖到左侧盒子切换目标盒
+          拖动到空位放置，或拖到其他盒子切换目标盒
         </div>
       )}
 
