@@ -9,29 +9,29 @@ const ACTION_STYLES: Record<TubeLifecycleLog['action'], {
   readonly border: string
 }> = {
   created: {
-    badge: 'bg-blue-50 text-blue-700 border-blue-200',
-    dot: 'bg-blue-500',
-    border: 'border-blue-100',
+    badge: 'bg-lab-accent/5 text-lab-accent border-lab-accent/30',
+    dot: 'bg-lab-accent',
+    border: 'border-lab-accent/30',
   },
   placed: {
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    dot: 'bg-emerald-500',
-    border: 'border-emerald-100',
+    badge: 'bg-lab-success/5 text-lab-success border-lab-success/30',
+    dot: 'bg-lab-success',
+    border: 'border-lab-success/30',
   },
   moved: {
-    badge: 'bg-amber-50 text-amber-700 border-amber-200',
-    dot: 'bg-amber-500',
-    border: 'border-amber-100',
+    badge: 'bg-lab-warning/5 text-lab-warning border-lab-warning/30',
+    dot: 'bg-lab-warning',
+    border: 'border-lab-warning/30',
   },
   used: {
-    badge: 'bg-rose-50 text-rose-700 border-rose-200',
-    dot: 'bg-rose-500',
-    border: 'border-rose-100',
+    badge: 'bg-lab-danger/5 text-lab-danger border-lab-danger/30',
+    dot: 'bg-lab-danger',
+    border: 'border-lab-danger/30',
   },
   archived: {
-    badge: 'bg-slate-100 text-slate-700 border-slate-200',
-    dot: 'bg-slate-500',
-    border: 'border-slate-200',
+    badge: 'bg-lab-surface text-lab-muted border-lab-border',
+    dot: 'bg-lab-faint',
+    border: 'border-lab-border',
   },
 }
 
@@ -76,7 +76,7 @@ function LogItem({
       <div className="flex gap-4">
         <div className="hidden sm:flex flex-col items-center">
           <span className={`mt-1 h-3 w-3 rounded-full ${style.dot}`} />
-          {!isLast && <span className="mt-2 w-px flex-1 min-h-16 bg-slate-200" />}
+          {!isLast && <span className="mt-2 w-px flex-1 min-h-16 bg-lab-border" />}
         </div>
 
         <div className="min-w-0 flex-1 space-y-3">
@@ -86,21 +86,21 @@ function LogItem({
                 <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${style.badge}`}>
                   {log.title}
                 </span>
-                <Link to={`/primers/${log.primer_id}`} className="font-medium text-slate-800 hover:text-blue-600 truncate">
+                <Link to={`/primers/${log.primer_id}`} className="font-medium text-lab-text hover:text-lab-accent truncate">
                   {log.primer_name}
                 </Link>
                 <span className={log.primer_type === 'probe' ? 'badge-probe' : 'badge-primer'}>
                   {log.primer_type === 'probe' ? '探针' : '引物'}
                 </span>
               </div>
-              <p className="text-sm text-slate-700 leading-6">{log.description}</p>
+              <p className="text-sm text-lab-text leading-6">{log.description}</p>
             </div>
-            <time className="text-xs text-slate-400 shrink-0">
+            <time className="text-xs text-lab-faint shrink-0">
               {formatDateTime(log.created_at)}
             </time>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+          <div className="flex flex-wrap gap-2 text-xs text-lab-muted">
             <MetaPill label="分管" value={formatTubeLabel(log.batch_number, log.tube_number)} />
             {log.from_position && <MetaPill label="原位置" value={log.from_position} />}
             {log.to_position && <MetaPill label="新位置" value={log.to_position} />}
@@ -124,9 +124,9 @@ function MetaPill({
   readonly value: string
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-slate-600">{value}</span>
+    <span className="inline-flex items-center gap-1 rounded-full bg-lab-surface px-2.5 py-1">
+      <span className="text-lab-faint">{label}</span>
+      <span className="text-lab-muted">{value}</span>
     </span>
   )
 }

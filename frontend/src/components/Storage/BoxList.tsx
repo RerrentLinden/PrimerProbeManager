@@ -41,21 +41,21 @@ function BoxCard({ box, isSelected, onSelect }: {
       data-box-id={box.id}
       onClick={onSelect}
       className={`card p-3 w-full text-left transition-all ${
-        isSelected ? 'ring-2 ring-blue-500 border-blue-300' : 'hover:border-slate-300'
+        isSelected ? 'ring-2 ring-lab-accent border-lab-accent/50' : 'hover:border-lab-border-light'
       }`}
     >
       <div className="font-medium text-sm">{box.name}</div>
-      <div className="text-xs text-slate-500 mt-0.5">
+      <div className="text-xs text-lab-muted mt-0.5">
         {box.storage_location ?? '-'} {box.storage_temperature ?? ''}
       </div>
       <div className="mt-2">
-        <div className="flex justify-between text-xs text-slate-500 mb-1">
+        <div className="flex justify-between text-xs text-lab-muted mb-1">
           <span>占用率</span>
-          <span className="tabular-nums">{occupied}/{capacity}</span>
+          <span className="tabular-nums text-lab-text">{occupied}/{capacity}</span>
         </div>
-        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-lab-bg rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all"
+            className="h-full bg-lab-accent rounded-full transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>

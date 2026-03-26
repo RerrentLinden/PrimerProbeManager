@@ -162,8 +162,8 @@ export default function StoragePage() {
           <>
             <div className="flex flex-col gap-3 mb-4 xl:flex-row xl:items-center">
               <div className="shrink-0 xl:min-w-[180px]">
-                <h2 className="text-lg font-semibold leading-none">{selectedBox.name}</h2>
-                <p className="text-xs text-slate-500 mt-2">{selectedBox.storage_location ?? ''} {selectedBox.storage_temperature ?? ''}</p>
+                <h2 className="text-lg font-semibold leading-none text-lab-text">{selectedBox.name}</h2>
+                <p className="text-xs text-lab-muted mt-2">{selectedBox.storage_location ?? ''} {selectedBox.storage_temperature ?? ''}</p>
               </div>
               <div ref={searchPanelRef} className="relative flex-1">
                 <input
@@ -183,17 +183,17 @@ export default function StoragePage() {
                   className="input-field text-sm w-full"
                 />
                 {showResults && tubeResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-slate-200 z-40 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-lab-raised rounded-xl shadow-panel-lg border border-lab-border z-40 max-h-60 overflow-y-auto">
                     {tubeResults.map((r, i) => (
                       <button
                         key={i}
                         type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 border-b border-slate-50 last:border-0"
+                        className="w-full text-left px-3 py-2 text-sm text-lab-text hover:bg-lab-highlight flex items-center gap-2 border-b border-lab-border last:border-0"
                         onClick={() => handleTubeResultSelect(r)}
                       >
                         <span className="font-medium">{r.primer_name}</span>
-                        <span className="text-xs text-slate-400">{r.batch_number}{r.tube_number ? ` #${r.tube_number}` : ''}</span>
-                        <span className="ml-auto text-xs text-slate-400">{r.box_name}</span>
+                        <span className="text-xs text-lab-muted">{r.batch_number}{r.tube_number ? ` #${r.tube_number}` : ''}</span>
+                        <span className="ml-auto text-xs text-lab-muted">{r.box_name}</span>
                       </button>
                     ))}
                   </div>
@@ -238,7 +238,7 @@ export default function StoragePage() {
       <Modal open={archiveTubeId !== null} title="归档引探管" onClose={() => setArchiveTubeId(null)}>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">归档原因 *</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">归档原因 *</label>
             <input type="text" value={archiveReason} onChange={(e) => setArchiveReason(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleArchive()} className="input-field" placeholder="用完、过期、污染..." autoFocus />
           </div>
           <div className="flex justify-end gap-3">
@@ -252,11 +252,11 @@ export default function StoragePage() {
       <Modal open={usageTubeId !== null} title="记录用量" onClose={() => setUsageTubeId(null)}>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">用量 (uL) *</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">用量 (uL) *</label>
             <input type="number" value={usageVol} onChange={(e) => setUsageVol(e.target.value)} className="input-field" autoFocus />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">用途</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">用途</label>
             <input type="text" value={usagePurpose} onChange={(e) => setUsagePurpose(e.target.value)} className="input-field" />
           </div>
           <div className="flex justify-end gap-3">

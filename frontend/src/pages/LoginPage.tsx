@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
 import { AUTH_TOKEN_KEY } from '@/api/client'
+import Logo from '@/components/common/Logo'
 
 export default function LoginPage() {
   const [token, setToken] = useState('')
@@ -35,17 +36,16 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-lab-bg p-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-lab-text">
-            <span className="text-lab-accent">PP</span>Manager
-          </h1>
-          <p className="text-xs font-semibold tracking-[0.18em] text-lab-muted/85 mt-2">PrimerProbeManager</p>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Logo size={64} />
+          <h1 className="text-2xl font-bold text-lab-text mt-3">Manager</h1>
+          <p className="text-xs font-semibold tracking-[0.18em] text-lab-muted/85 mt-1.5">PrimerProbeManager</p>
           <p className="text-sm text-lab-muted mt-1">引探管理系统</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <div>
-            <label htmlFor="token" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="token" className="block text-sm font-medium text-lab-muted mb-1">
               访问令牌
             </label>
             <input
@@ -60,7 +60,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-lab-danger bg-lab-danger/10 rounded-lg px-3 py-2">{error}</p>
           )}
 
           <button type="submit" disabled={loading || !token.trim()} className="btn-primary w-full">

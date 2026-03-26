@@ -143,7 +143,7 @@ export default function BoxGrid({ box, grid, searchHighlight, onEmptySlotClick, 
   return (
     <div>
       {drag && (
-        <div className="mb-3 flex items-center gap-2 text-xs bg-blue-50 text-blue-700 rounded-lg px-3 py-1.5">
+        <div className="mb-3 flex items-center gap-2 text-xs bg-lab-accent/10 text-lab-accent rounded-lg px-3 py-1.5">
           <svg className="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
@@ -163,7 +163,7 @@ export default function BoxGrid({ box, grid, searchHighlight, onEmptySlotClick, 
         <div className="space-y-1">
           {grid.map((row, ri) => (
             <div key={ri} className="flex items-center gap-1">
-              <span className="w-6 text-center text-xs font-medium text-slate-500 shrink-0">{rowLabel(ri)}</span>
+              <span className="w-6 text-center text-xs font-medium text-lab-muted shrink-0">{rowLabel(ri)}</span>
               <div className="flex-1 grid gap-1" style={{ gridTemplateColumns: `repeat(${box.cols}, minmax(0, 1fr))` }}>
                 {row.map((slot) => (
                   <GridSlotCell
@@ -185,7 +185,7 @@ export default function BoxGrid({ box, grid, searchHighlight, onEmptySlotClick, 
       {/* Drag ghost */}
       {drag && (
         <div className="fixed z-50 pointer-events-none transition-none" style={{ left: drag.x - 30, top: drag.y - 30 }}>
-          <div className="w-[60px] h-[60px] rounded-xl bg-blue-500 text-white shadow-2xl flex flex-col items-center justify-center opacity-90">
+          <div className="w-[60px] h-[60px] rounded-xl bg-lab-accent text-white shadow-glow-blue flex flex-col items-center justify-center opacity-90">
             <span className="text-[9px] font-bold truncate max-w-[56px]">{drag.label}</span>
           </div>
         </div>
@@ -200,7 +200,7 @@ function ColHeaders({ cols }: { readonly cols: number }) {
       <span className="w-6 shrink-0" />
       <div className="flex-1 grid gap-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {Array.from({ length: cols }, (_, i) => (
-          <span key={i} className="text-center text-xs font-medium text-slate-500">{i + 1}</span>
+          <span key={i} className="text-center text-xs font-medium text-lab-muted">{i + 1}</span>
         ))}
       </div>
     </div>

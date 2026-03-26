@@ -45,10 +45,10 @@ export default function PrimerDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link to="/primers" className="hover:text-blue-600">引探管理</Link>
+      <div className="flex items-center gap-2 text-sm text-lab-muted">
+        <Link to="/primers" className="hover:text-lab-accent">引探管理</Link>
         <span>/</span>
-        <span className="text-slate-800">{primer.name}</span>
+        <span className="text-lab-text">{primer.name}</span>
       </div>
 
       <PrimerInfoCard primer={primer} onEdit={() => setShowEditPrimer(true)} />
@@ -56,7 +56,7 @@ export default function PrimerDetailPage() {
       <ProjectSection primerId={primerId} projects={primer.projects ?? []} onRefresh={loadData} />
 
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">分管列表 ({tubes.length})</h2>
+        <h2 className="text-lg font-semibold text-lab-text">分管列表 ({tubes.length})</h2>
         <button type="button" className="btn-primary text-sm" onClick={() => setShowAddTube(true)}>
           添加新管
         </button>
@@ -164,7 +164,7 @@ function ProjectSection({ primerId, projects, onRefresh }: {
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-medium text-slate-500">归属项目</h3>
+        <h3 className="text-xs font-medium text-lab-muted">归属项目</h3>
         <button
           type="button"
           onClick={() => setEditing(!editing)}
@@ -175,18 +175,18 @@ function ProjectSection({ primerId, projects, onRefresh }: {
       </div>
 
       {projects.length === 0 && !editing && (
-        <p className="text-sm text-slate-400">未归属任何项目</p>
+        <p className="text-sm text-lab-faint">未归属任何项目</p>
       )}
 
       <div className="flex flex-wrap gap-2">
         {projects.map((proj) => (
           <span
             key={proj.id}
-            className="inline-flex items-center gap-1 text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-lg"
+            className="inline-flex items-center gap-1 text-sm bg-lab-accent/10 text-lab-accent px-3 py-1 rounded-lg"
           >
             <Link to={`/projects/${proj.id}`} className="hover:underline">{proj.name}</Link>
             {editing && (
-              <button type="button" onClick={() => handleRemove(proj.id)} className="text-blue-400 hover:text-red-500 ml-1">
+              <button type="button" onClick={() => handleRemove(proj.id)} className="text-lab-accent/50 hover:text-lab-danger ml-1">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -205,7 +205,7 @@ function ProjectSection({ primerId, projects, onRefresh }: {
                   key={p.id}
                   type="button"
                   onClick={() => handleAdd(p.id)}
-                  className="text-xs border border-dashed border-slate-300 text-slate-500 px-2.5 py-1 rounded-lg hover:border-blue-400 hover:text-blue-600 transition-colors"
+                  className="text-xs border border-dashed border-lab-border text-lab-muted px-2.5 py-1 rounded-lg hover:border-lab-accent hover:text-lab-accent transition-colors"
                 >
                   + {p.name}
                 </button>

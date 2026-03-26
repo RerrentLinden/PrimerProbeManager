@@ -20,7 +20,7 @@ export default function PrimerInfoCard({ primer, onEdit }: Props) {
     <div className="card p-5">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">{primer.name}</h1>
+          <h1 className="text-xl font-bold text-lab-text">{primer.name}</h1>
           <span className={primer.type === 'probe' ? 'badge-probe' : 'badge-primer'}>
             {primer.type === 'probe' ? '探针' : '引物'}
           </span>
@@ -31,19 +31,19 @@ export default function PrimerInfoCard({ primer, onEdit }: Props) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-medium text-slate-500 mb-1">序列 (5' → 3')</label>
+        <label className="block text-xs font-medium text-lab-muted mb-1">序列 (5' → 3')</label>
         <button
           type="button"
           onClick={copySequence}
           title="点击复制序列"
-          className="flex items-center gap-2 bg-slate-50 rounded-lg p-3 w-full text-left hover:bg-slate-100 cursor-pointer transition-colors"
+          className="flex items-center gap-2 bg-lab-bg rounded-lg p-3 w-full text-left hover:bg-lab-highlight cursor-pointer transition-colors border border-lab-border/50"
         >
-          <code className="font-sequence text-sm text-slate-700 break-all flex-1">
+          <code className="font-sequence text-sm text-lab-text break-all flex-1">
             {primer.sequence}
           </code>
-          <span className="shrink-0 text-slate-400">
+          <span className="shrink-0 text-lab-faint">
             {copied ? (
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-lab-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             ) : (
@@ -76,8 +76,8 @@ function InfoGrid({ primer }: { readonly primer: Primer }) {
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {fields.map((f) => (
         <div key={f.label}>
-          <dt className="text-xs text-slate-500">{f.label}</dt>
-          <dd className="text-sm font-medium text-slate-700 tabular-nums">{f.value}</dd>
+          <dt className="text-xs text-lab-muted">{f.label}</dt>
+          <dd className="text-sm font-medium text-lab-text tabular-nums">{f.value}</dd>
         </div>
       ))}
     </div>

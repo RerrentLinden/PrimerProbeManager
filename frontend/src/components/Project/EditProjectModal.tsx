@@ -64,7 +64,7 @@ export default function EditProjectModal({
       <Modal open={open} title="编辑项目" onClose={onClose}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">项目名称 *</label>
+            <label className="block text-sm font-medium text-lab-muted mb-1">项目名称 *</label>
             <input
               type="text"
               value={form.name}
@@ -74,7 +74,7 @@ export default function EditProjectModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">描述</label>
+            <label className="block text-sm font-medium text-lab-muted mb-1">描述</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
@@ -83,7 +83,7 @@ export default function EditProjectModal({
             />
           </div>
 
-          {error && <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>}
+          {error && <p className="text-xs text-lab-danger bg-lab-danger/10 rounded px-3 py-2">{error}</p>}
 
           <div className="flex items-center justify-between pt-2">
             <button

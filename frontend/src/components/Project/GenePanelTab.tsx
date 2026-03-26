@@ -39,7 +39,7 @@ export default function GenePanelTab({ projectId, genes, onRefresh }: Props) {
       </div>
 
       {channels.length === 0 || tubeNumbers.length === 0 ? (
-        <p className="text-sm text-slate-500 py-8 text-center">点击"添加基因"开始构建面板</p>
+        <p className="text-sm text-lab-muted py-8 text-center">点击"添加基因"开始构建面板</p>
       ) : (
         <GeneGrid
           channels={channels}
@@ -77,14 +77,14 @@ function GeneGrid({ channels, tubeNumbers, getGene, onCellClick, onDelete }: {
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
+      <table className="w-full text-sm border-collapse border-lab-border bg-lab-surface">
         <thead>
           <tr>
-            <th className="border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-500">
+            <th className="border border-lab-border bg-lab-raised px-3 py-2 text-left text-xs font-medium text-lab-muted">
               荧光通道
             </th>
             {tubeNumbers.map((n) => (
-              <th key={n} className="border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-medium text-slate-500">
+              <th key={n} className="border border-lab-border bg-lab-raised px-3 py-2 text-center text-xs font-medium text-lab-muted">
                 管 {n}
               </th>
             ))}
@@ -93,24 +93,24 @@ function GeneGrid({ channels, tubeNumbers, getGene, onCellClick, onDelete }: {
         <tbody>
           {channels.map((ch) => (
             <tr key={ch}>
-              <td className="border border-slate-200 px-3 py-2 font-medium text-xs bg-slate-50">{ch}</td>
+              <td className="border border-lab-border px-3 py-2 font-medium text-xs bg-lab-raised text-lab-text">{ch}</td>
               {tubeNumbers.map((num) => {
                 const gene = getGene(ch, num)
                 return (
-                  <td key={num} className="border border-slate-200 px-2 py-1 text-center">
+                  <td key={num} className="border border-lab-border px-2 py-1 text-center hover:bg-lab-highlight/50">
                     {gene ? (
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
                           onClick={() => onCellClick(gene)}
-                          className="text-sm hover:text-blue-600"
+                          className="text-sm text-lab-text hover:text-lab-accent"
                         >
                           {gene.gene_name}
                         </button>
-                        <button type="button" onClick={() => onDelete(gene.id)} className="text-slate-300 hover:text-red-500 text-xs">x</button>
+                        <button type="button" onClick={() => onDelete(gene.id)} className="text-lab-faint hover:text-lab-danger text-xs">x</button>
                       </div>
                     ) : (
-                      <span className="text-slate-300">-</span>
+                      <span className="text-lab-faint">-</span>
                     )}
                   </td>
                 )
@@ -150,7 +150,7 @@ function GeneEditModal({ open, projectId, gene, onClose, onSuccess }: {
     <Modal open={open} title="编辑基因" onClose={onClose}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">基因名称</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">基因名称</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" />
         </div>
         <div className="flex justify-end gap-3">
@@ -191,15 +191,15 @@ function GeneAddModal({ open, projectId, onClose, onSuccess }: {
     <Modal open={open} title="添加基因" onClose={onClose}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">基因名称 *</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">基因名称 *</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="如: FCGRA, GBP5" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">荧光通道</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">荧光通道</label>
           <input type="text" value={channel} onChange={(e) => setChannel(e.target.value)} className="input-field" placeholder="如: 5'6-FAM, VIC, ROX" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">管号</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">管号</label>
           <input type="number" value={tubeNum} onChange={(e) => setTubeNum(e.target.value)} className="input-field" placeholder="如: 1, 2, 3" min="1" />
         </div>
         <div className="flex justify-end gap-3">

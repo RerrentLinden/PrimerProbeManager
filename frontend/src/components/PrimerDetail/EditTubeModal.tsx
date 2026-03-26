@@ -51,20 +51,20 @@ export default function EditTubeModal({ open, tube, onClose, onSuccess }: Props)
     <Modal open={open} title="编辑分管信息" onClose={onClose}>
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">批号</label>
+          <label className="block text-xs font-medium text-lab-muted mb-1">批号</label>
           <input type="text" value={form.batch_number} onChange={(e) => set('batch_number', e.target.value)} className="input-field" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">分管编号</label>
+          <label className="block text-xs font-medium text-lab-muted mb-1">分管编号</label>
           <input type="text" value={form.tube_number} onChange={(e) => set('tube_number', e.target.value)} className="input-field" placeholder="如: #1, #2, A, B..." />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">定容日期</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">定容日期</label>
             <input type="date" value={form.dissolution_date} onChange={(e) => set('dissolution_date', e.target.value)} className="input-field" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">初始体积 (uL)</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">初始体积 (uL)</label>
             <input type="number" value={form.initial_volume_ul} onChange={(e) => set('initial_volume_ul', e.target.value)} className="input-field" />
           </div>
         </div>

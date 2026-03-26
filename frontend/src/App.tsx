@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/hooks/useTheme'
 import AppLayout from '@/components/Layout/AppLayout'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import LoginPage from '@/pages/LoginPage'
@@ -24,6 +25,7 @@ function ProtectedRoutes() {
 }
 
 export default function App() {
+  useTheme() // Initialize theme on app mount
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

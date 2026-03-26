@@ -30,11 +30,11 @@ export default function CreateProjectModal({ open, onClose, onSuccess }: Props) 
     <Modal open={open} title="新建项目" onClose={onClose}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">项目名称 *</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">项目名称 *</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">描述</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">描述</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field" rows={3} />
         </div>
         <div className="flex justify-end gap-3 pt-2">

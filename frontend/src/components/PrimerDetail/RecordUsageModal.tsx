@@ -47,7 +47,7 @@ export default function RecordUsageModal({ open, tubeId, onClose, onSuccess }: P
     <Modal open={open} title="记录用量" onClose={onClose}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">用量 (uL) *</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">用量 (uL) *</label>
           <input
             type="number"
             step="0.1"
@@ -59,7 +59,7 @@ export default function RecordUsageModal({ open, tubeId, onClose, onSuccess }: P
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">用途</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">用途</label>
           <input
             type="text"
             value={purpose}
@@ -69,7 +69,7 @@ export default function RecordUsageModal({ open, tubeId, onClose, onSuccess }: P
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">项目</label>
+          <label className="block text-sm font-medium text-lab-muted mb-1">项目</label>
           <input
             type="text"
             value={project}

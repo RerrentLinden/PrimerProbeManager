@@ -38,7 +38,7 @@ export default function ProjectTubesTab({ projectId, primers, onRefresh }: Props
         </button>
       </div>
 
-      {actionError && <p className="mb-4 text-xs text-red-600 bg-red-50 rounded px-3 py-2">{actionError}</p>}
+      {actionError && <p className="mb-4 text-xs text-lab-danger bg-lab-danger/10 rounded px-3 py-2">{actionError}</p>}
 
       {primers.length === 0 ? (
         <EmptyState title="暂无关联引探" description="点击添加引探按钮关联" />
@@ -105,12 +105,12 @@ function AddPrimerToProjectModal({ open, projectId, existingIds, onClose, onSucc
           placeholder="搜索引探..."
           className="input-field"
         />
-        {error && <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>}
-        {loading && <p className="text-sm text-slate-400 text-center py-4">加载中...</p>}
-        {!loading && primers.length === 0 && <p className="text-sm text-slate-400 text-center py-4">无可添加的引探</p>}
+        {error && <p className="text-xs text-lab-danger bg-lab-danger/10 rounded px-3 py-2">{error}</p>}
+        {loading && <p className="text-sm text-lab-muted text-center py-4">加载中...</p>}
+        {!loading && primers.length === 0 && <p className="text-sm text-lab-muted text-center py-4">无可添加的引探</p>}
         <div className="max-h-60 overflow-y-auto space-y-1">
           {primers.map((p) => (
-            <button key={p.id} type="button" onClick={() => handleSelect(p.id)} className="w-full card p-2 text-left hover:border-blue-300 text-sm flex items-center gap-2">
+            <button key={p.id} type="button" onClick={() => handleSelect(p.id)} className="w-full card p-2 text-left hover:border-lab-accent/50 text-sm flex items-center gap-2">
               <span className="font-medium">{p.name}</span>
               <span className={p.type === 'probe' ? 'badge-probe' : 'badge-primer'}>
                 {p.type === 'probe' ? '探针' : '引物'}

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useCallback } from 'react'
+import Logo from '@/components/common/Logo'
 
 export default function MobileHeader() {
   const [showSearch, setShowSearch] = useState(false)
@@ -19,10 +20,11 @@ export default function MobileHeader() {
   )
 
   return (
-    <header className="lg:hidden sticky top-0 z-40 bg-lab-surface text-lab-text border-b border-lab-border px-4 h-12 flex items-center justify-between">
-      <h1 className="text-sm font-bold">
-        <span className="text-lab-accent">Primer</span>Manager
-      </h1>
+    <header className="lg:hidden sticky top-0 z-40 bg-metal-sidebar text-lab-text border-b border-lab-border shadow-panel px-4 h-12 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Logo size={28} />
+        <h1 className="text-sm font-bold text-lab-text">Manager</h1>
+      </div>
       {showSearch ? (
         <form onSubmit={handleSubmit} className="flex-1 ml-3">
           <input
@@ -32,7 +34,7 @@ export default function MobileHeader() {
             onChange={(e) => setQuery(e.target.value)}
             onBlur={() => !query && setShowSearch(false)}
             placeholder="全局搜索"
-            className="w-full px-3 py-1 rounded bg-lab-bg text-sm text-lab-text border border-lab-border focus:outline-none"
+            className="input-field px-3 py-1 text-sm"
           />
         </form>
       ) : (

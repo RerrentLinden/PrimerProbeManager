@@ -19,7 +19,7 @@ export default function PrimerTable({ primers }: Props) {
     <div className="hidden md:block overflow-x-auto">
       <table className="w-full text-sm table-fixed">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <tr className="border-b border-lab-border text-left text-xs font-medium text-lab-muted uppercase tracking-wider">
             <th className="pb-3 pr-3" style={{ width: '9%' }}>名称</th>
             <th className="pb-3 pr-3" style={{ width: '20%' }}>序列</th>
             <th className="pb-3 pr-3" style={{ width: '10%' }}>修饰</th>
@@ -31,18 +31,18 @@ export default function PrimerTable({ primers }: Props) {
             <th className="pb-3" style={{ width: '4%' }}>管数</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-lab-border/50">
           {primers.map((p) => (
-            <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+            <tr key={p.id} className="hover:bg-lab-highlight/50 transition-colors">
               <td className="py-3 pr-3 truncate">
-                <Link to={`/primers/${p.id}`} className="font-medium text-blue-600 hover:text-blue-800">
+                <Link to={`/primers/${p.id}`} className="font-medium text-lab-accent hover:text-lab-accent/80">
                   {p.name}
                 </Link>
               </td>
               <td className="py-3 pr-3">
                 <CopyableSequence sequence={p.sequence} />
               </td>
-              <td className="py-3 pr-3 text-xs text-slate-500 truncate" title={formatModifications(p)}>
+              <td className="py-3 pr-3 text-xs text-lab-muted truncate" title={formatModifications(p)}>
                 {formatModifications(p) || '-'}
               </td>
               <td className="py-3 pr-3">
@@ -56,18 +56,18 @@ export default function PrimerTable({ primers }: Props) {
                     <Link
                       key={proj.id}
                       to={`/projects/${proj.id}`}
-                      className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors"
                     >
                       {proj.name}
                     </Link>
                   ))}
-                  {(!p.projects || p.projects.length === 0) && <span className="text-xs text-slate-300">-</span>}
+                  {(!p.projects || p.projects.length === 0) && <span className="text-xs text-lab-faint">-</span>}
                 </div>
               </td>
-              <td className="py-3 pr-3 tabular-nums text-slate-600 truncate">{p.mw?.toFixed(1) ?? '-'}</td>
-              <td className="py-3 pr-3 tabular-nums text-slate-600">{p.tm?.toFixed(1) ?? '-'}</td>
-              <td className="py-3 pr-3 tabular-nums text-slate-600">{formatGcPercent(p.gc_percent)}</td>
-              <td className="py-3 tabular-nums">{p.active_tube_count ?? 0}</td>
+              <td className="py-3 pr-3 tabular-nums text-lab-muted truncate">{p.mw?.toFixed(1) ?? '-'}</td>
+              <td className="py-3 pr-3 tabular-nums text-lab-muted">{p.tm?.toFixed(1) ?? '-'}</td>
+              <td className="py-3 pr-3 tabular-nums text-lab-muted">{formatGcPercent(p.gc_percent)}</td>
+              <td className="py-3 tabular-nums text-lab-text">{p.active_tube_count ?? 0}</td>
             </tr>
           ))}
         </tbody>
@@ -90,9 +90,9 @@ function CopyableSequence({ sequence }: { readonly sequence: string }) {
       type="button"
       onClick={handleClick}
       title="点击复制完整序列"
-      className="font-sequence text-xs text-slate-600 hover:text-blue-600 cursor-pointer transition-colors block w-full text-left truncate"
+      className="font-sequence text-xs text-lab-muted hover:text-lab-accent cursor-pointer transition-colors block w-full text-left truncate"
     >
-      {copied ? <span className="text-green-600">已复制 ✓</span> : sequence}
+      {copied ? <span className="text-lab-success">已复制 ✓</span> : sequence}
     </button>
   )
 }

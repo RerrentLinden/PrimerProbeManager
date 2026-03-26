@@ -27,7 +27,7 @@ export default function ProjectListPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">项目管理</h1>
+        <h1 className="text-xl font-bold text-lab-text">项目管理</h1>
         <button type="button" className="btn-primary text-sm" onClick={() => setShowCreate(true)}>
           新建项目
         </button>
@@ -42,12 +42,12 @@ export default function ProjectListPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((p) => (
-            <Link key={p.id} to={`/projects/${p.id}`} className="card p-4 hover:border-blue-300 transition-colors">
-              <h3 className="font-semibold text-slate-800">{p.name}</h3>
+            <Link key={p.id} to={`/projects/${p.id}`} className="card p-4 hover:border-lab-accent/40 transition-colors">
+              <h3 className="font-semibold text-lab-text">{p.name}</h3>
               {p.description && (
-                <p className="text-sm text-slate-500 mt-1 line-clamp-2">{p.description}</p>
+                <p className="text-sm text-lab-muted mt-1 line-clamp-2">{p.description}</p>
               )}
-              <div className="flex gap-4 mt-3 text-xs text-slate-400">
+              <div className="flex gap-4 mt-3 text-xs text-lab-muted">
                 <span>引探: {p.primer_count ?? 0}</span>
                 <span>基因: {p.gene_count ?? 0}</span>
               </div>

@@ -66,7 +66,7 @@ export default function CreatePrimerModal({ open, onClose, onSuccess }: Props) {
         modification_5prime: normalizeModification(form.modification_5prime),
         modification_3prime: normalizeModification(form.modification_3prime),
         mw: Number(form.mw),
-        tm: Number(form.tm),
+        tm: toOptionalNumber(form.tm),
         ug_per_od: toOptionalNumber(form.ug_per_od),
         nmol_per_od: toOptionalNumber(form.nmol_per_od),
         purification_method: toOptionalString(form.purification_method),
@@ -104,7 +104,7 @@ export default function CreatePrimerModal({ open, onClose, onSuccess }: Props) {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="MW" value={form.mw} onChange={(value) => setField('mw', value)} required type="number" />
-          <Field label="Tm (°C)" value={form.tm} onChange={(value) => setField('tm', value)} required type="number" />
+          <Field label="Tm (°C)" value={form.tm} onChange={(value) => setField('tm', value)} type="number" />
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -118,7 +118,7 @@ export default function CreatePrimerModal({ open, onClose, onSuccess }: Props) {
           onChange={(value) => setField('purification_method', value)}
         />
 
-        {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+        {error && <p className="text-sm text-lab-danger bg-lab-danger/10 border border-lab-danger/30 rounded-lg px-3 py-2">{error}</p>}
 
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
@@ -148,7 +148,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">
+      <label className="block text-sm font-medium text-lab-muted mb-1">
         {label}
         {required ? ' *' : ''}
       </label>
@@ -176,7 +176,7 @@ function ModField({
   const listId = `create-mod-list-${label.replace(/'/g, '')}`
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label} *</label>
+      <label className="block text-sm font-medium text-lab-muted mb-1">{label}</label>
       <input
         type="text"
         value={value}
@@ -194,16 +194,14 @@ function ModField({
 }
 
 function isValid(form: PrimerFormState): boolean {
-  const requiredFieldsPresent = [
-    form.name,
-    form.sequence,
-    form.modification_5prime,
-    form.modification_3prime,
+  const requiredFieldsPresent = [form.name, form.sequence, form.mw].every((value) => value.trim())
+  if (!requiredFieldsPresent) return false
+  return [
     form.mw,
     form.tm,
-  ].every((value) => value.trim())
-  if (!requiredFieldsPresent) return false
-  return Number.isFinite(Number(form.mw)) && Number.isFinite(Number(form.tm))
+    form.ug_per_od,
+    form.nmol_per_od,
+  ].every(isBlankOrFiniteNumber)
 }
 
 function normalizeModification(value: string): string | null {
@@ -216,6 +214,11 @@ function toOptionalNumber(value: string): number | null {
   const trimmed = value.trim()
   if (!trimmed) return null
   return Number(trimmed)
+}
+
+function isBlankOrFiniteNumber(value: string): boolean {
+  const trimmed = value.trim()
+  return !trimmed || Number.isFinite(Number(trimmed))
 }
 
 function toOptionalString(value: string): string | null {

@@ -60,16 +60,16 @@ export default function EditBoxModal({ open, box, onClose, onSuccess, onDelete }
     <Modal open={open} title="编辑冻存盒" onClose={onClose}>
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">名称</label>
+          <label className="block text-xs font-medium text-lab-muted mb-1">名称</label>
           <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">存放位置</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">存放位置</label>
             <input type="text" value={form.storage_location} onChange={(e) => setForm({ ...form, storage_location: e.target.value })} className="input-field" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">存放温度</label>
+            <label className="block text-xs font-medium text-lab-muted mb-1">存放温度</label>
             <input type="text" value={form.storage_temperature} onChange={(e) => setForm({ ...form, storage_temperature: e.target.value })} className="input-field" />
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function EditBoxModal({ open, box, onClose, onSuccess, onDelete }
             <button type="button" className="btn-primary" disabled={saving || !form.name} onClick={handleSave}>{saving ? '...' : '保存'}</button>
           </div>
         </div>
-        {deleteError && <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{deleteError}</p>}
+        {deleteError && <p className="text-xs text-lab-danger bg-lab-danger/10 rounded px-3 py-2">{deleteError}</p>}
       </div>
     </Modal>
   )

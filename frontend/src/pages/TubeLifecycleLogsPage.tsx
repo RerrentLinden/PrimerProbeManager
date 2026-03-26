@@ -91,8 +91,8 @@ export default function TubeLifecycleLogsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
-          <h1 className="text-xl font-bold text-slate-800">日志记录</h1>
-          <p className="text-sm text-slate-500">最新日志置顶，向下可查看更早的引探分管全生命周期记录</p>
+          <h1 className="text-xl font-bold text-lab-text">日志记录</h1>
+          <p className="text-sm text-lab-muted">最新日志置顶，向下可查看更早的引探分管全生命周期记录</p>
         </div>
         <button
           type="button"
@@ -128,17 +128,17 @@ export default function TubeLifecycleLogsPage() {
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-lab-muted">
           <span>当前范围:</span>
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+          <span className="inline-flex items-center rounded-full bg-lab-surface px-3 py-1 text-lab-text">
             {activeSummary}
           </span>
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-blue-600">
+          <span className="inline-flex items-center rounded-full bg-lab-accent/10 px-3 py-1 text-lab-accent">
             共 {logs.length} 条
           </span>
         </div>
 
-        {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+        {error && <p className="text-sm text-lab-danger bg-lab-danger/10 rounded-lg px-3 py-2">{error}</p>}
       </div>
 
       {loading ? <LoadingSpinner /> : <TubeLifecycleLogList logs={logs} />}
@@ -157,7 +157,7 @@ function DateField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-lab-muted mb-1">{label}</label>
       <input
         type="date"
         value={value}
@@ -171,8 +171,8 @@ function DateField({
 function filterButtonClass(active: boolean): string {
   const base = 'rounded-full border px-3 py-1.5 text-sm transition-colors'
   return active
-    ? `${base} border-blue-200 bg-blue-50 text-blue-700`
-    : `${base} border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700`
+    ? `${base} border-lab-accent bg-lab-accent/10 text-lab-accent`
+    : `${base} border-lab-border bg-lab-surface text-lab-muted hover:border-lab-border-light hover:text-lab-text`
 }
 
 function resolveCustomFilter(start: string, end: string): TubeLifecycleLogFilter | null {

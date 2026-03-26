@@ -2,81 +2,319 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   THEME SYSTEM: CSS variable–driven, supports dark / light / system
+   Switch theme by setting data-theme="dark"|"light" on <html>
+   ============================================================ */
+
 @layer base {
+  /* ── Dark theme (default) — Laboratory Instrument Panel ── */
+  :root,
+  [data-theme="dark"] {
+    --lab-bg: 17 19 24;
+    --lab-surface: 28 32 40;
+    --lab-raised: 37 42 53;
+    --lab-highlight: 45 51 63;
+    --lab-metal: 53 60 74;
+    --lab-metal-light: 65 73 89;
+    --lab-metal-edge: 74 83 104;
+    --lab-border: 42 48 64;
+    --lab-border-light: 58 66 88;
+    --lab-text: 232 236 244;
+    --lab-muted: 139 149 168;
+    --lab-faint: 90 100 120;
+    --lab-accent: 74 158 255;
+    --lab-probe: 255 138 61;
+    --lab-success: 61 214 140;
+    --lab-danger: 255 71 87;
+    --lab-warning: 255 212 59;
+    /* Sidebar gradient endpoints */
+    --sidebar-top: 24 27 34;
+    --sidebar-bottom: 20 23 32;
+    /* Shadow intensity (0-1 range) */
+    --shadow-strength: 0.35;
+    /* Panel inset highlight */
+    --inset-highlight: rgba(255,255,255,0.04);
+    --inset-highlight-hover: rgba(255,255,255,0.06);
+    /* Row hover */
+    --row-hover: rgba(255,255,255,0.02);
+    /* Scrollbar */
+    --scrollbar-track: 17 19 24;
+    --scrollbar-thumb: 53 60 74;
+    /* Select arrow color */
+    --select-arrow: %238b95a8;
+  }
+
+  /* ── Light theme — Clean Laboratory ── */
+  [data-theme="light"] {
+    --lab-bg: 241 243 247;
+    --lab-surface: 255 255 255;
+    --lab-raised: 248 249 252;
+    --lab-highlight: 238 240 245;
+    --lab-metal: 210 215 224;
+    --lab-metal-light: 195 201 212;
+    --lab-metal-edge: 205 210 220;
+    --lab-border: 218 222 230;
+    --lab-border-light: 230 233 240;
+    --lab-text: 26 32 44;
+    --lab-muted: 90 100 120;
+    --lab-faint: 160 170 185;
+    --lab-accent: 37 99 235;
+    --lab-probe: 234 88 12;
+    --lab-success: 22 163 74;
+    --lab-danger: 220 38 38;
+    --lab-warning: 180 120 4;
+    --sidebar-top: 248 249 252;
+    --sidebar-bottom: 241 243 247;
+    --shadow-strength: 0.08;
+    --inset-highlight: rgba(255,255,255,0.6);
+    --inset-highlight-hover: rgba(255,255,255,0.8);
+    --row-hover: rgba(0,0,0,0.02);
+    --scrollbar-track: 241 243 247;
+    --scrollbar-thumb: 210 215 224;
+    --select-arrow: %235a6478;
+  }
+
+  /* ── Interaction timing ── */
   :root {
-    --color-accent: #3b82f6;
-    --color-probe: #f97316;
-    --color-success: #22c55e;
-    --color-danger: #ef4444;
-    --color-surface: #1e293b;
+    --timing-press: 100ms;
+    --timing-hover: 150ms;
+    --timing-transition: 200ms;
   }
 
   body {
-    @apply bg-gray-50 text-slate-800;
+    background: rgb(var(--lab-bg));
+    color: rgb(var(--lab-text));
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   .font-sequence {
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.05em;
   }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgb(var(--scrollbar-track)); }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--scrollbar-thumb)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--lab-metal-light)); }
 }
 
 @layer components {
+  /* ════════════════════════════════════════
+     CARD — Panel surface
+     ════════════════════════════════════════ */
+  .card {
+    background: linear-gradient(145deg, rgb(var(--lab-raised)), rgb(var(--lab-surface)));
+    border: 1px solid rgb(var(--lab-border));
+    border-top-color: rgb(var(--lab-border-light));
+    border-radius: 0.75rem;
+    box-shadow:
+      0 2px 8px rgba(0,0,0,var(--shadow-strength)),
+      0 1px 3px rgba(0,0,0,var(--shadow-strength)),
+      inset 0 1px 0 var(--inset-highlight);
+  }
+
+  /* ════════════════════════════════════════
+     STAT CARD
+     ════════════════════════════════════════ */
   .stat-card {
-    @apply rounded-xl p-4 shadow-sm border transition-all duration-200;
-    @apply hover:shadow-md hover:-translate-y-0.5;
+    background: linear-gradient(145deg, rgb(var(--lab-raised)), rgb(var(--lab-surface)));
+    border: 1px solid rgb(var(--lab-border));
+    border-top-color: rgb(var(--lab-border-light));
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow:
+      0 2px 6px rgba(0,0,0,var(--shadow-strength)),
+      inset 0 1px 0 var(--inset-highlight);
+    transition: all var(--timing-transition) ease;
+  }
+  .stat-card:hover {
+    box-shadow:
+      0 4px 12px rgba(0,0,0,var(--shadow-strength)),
+      inset 0 1px 0 var(--inset-highlight-hover);
+    transform: translateY(-1px);
   }
 
-  .badge-primer {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
-    @apply bg-blue-100 text-blue-700;
-  }
-
-  .badge-probe {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
-    @apply bg-orange-100 text-orange-700;
-  }
-
+  /* ════════════════════════════════════════
+     BUTTONS
+     ════════════════════════════════════════ */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg;
-    @apply bg-blue-500 text-white font-medium text-sm;
-    @apply hover:bg-blue-600 active:bg-blue-700;
-    @apply transition-colors duration-150;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium;
+    border-radius: 0.5rem;
+    color: #fff;
+    background: linear-gradient(180deg, rgb(var(--lab-accent) / 0.9) 0%, rgb(var(--lab-accent)) 100%);
+    border: 1px solid rgb(var(--lab-accent) / 0.8);
+    box-shadow:
+      0 2px 4px rgba(0,0,0,var(--shadow-strength)),
+      0 1px 2px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: all var(--timing-hover) ease;
   }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgb(var(--lab-accent)) 0%, rgb(var(--lab-accent) / 0.85) 100%);
+    box-shadow:
+      0 3px 8px rgba(var(--lab-accent),0.3),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .btn-primary:active:not(:disabled) {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    transform: scale(0.98);
+  }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg;
-    @apply bg-white text-slate-700 font-medium text-sm border border-slate-200;
-    @apply hover:bg-slate-50 active:bg-slate-100;
-    @apply transition-colors duration-150;
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium;
+    border-radius: 0.5rem;
+    color: rgb(var(--lab-text));
+    background: linear-gradient(180deg, rgb(var(--lab-metal)), rgb(var(--lab-metal) / 0.85));
+    border: 1px solid rgb(var(--lab-metal-edge));
+    box-shadow:
+      0 2px 4px rgba(0,0,0,var(--shadow-strength)),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+    transition: all var(--timing-hover) ease;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgb(var(--lab-metal-light)), rgb(var(--lab-metal)));
+    box-shadow:
+      0 3px 6px rgba(0,0,0,var(--shadow-strength)),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .btn-secondary:active:not(:disabled) {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,var(--shadow-strength));
+    transform: scale(0.98);
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg;
-    @apply bg-red-500 text-white font-medium text-sm;
-    @apply hover:bg-red-600 active:bg-red-700;
-    @apply transition-colors duration-150;
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium;
+    border-radius: 0.5rem;
+    color: #fff;
+    background: linear-gradient(180deg, rgb(var(--lab-danger) / 0.9) 0%, rgb(var(--lab-danger)) 100%);
+    border: 1px solid rgb(var(--lab-danger) / 0.8);
+    box-shadow:
+      0 2px 4px rgba(0,0,0,var(--shadow-strength)),
+      inset 0 1px 0 rgba(255,255,255,0.12);
+    transition: all var(--timing-hover) ease;
   }
+  .btn-danger:hover:not(:disabled) {
+    box-shadow:
+      0 3px 8px rgba(var(--lab-danger),0.3),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .btn-danger:active:not(:disabled) {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    transform: scale(0.98);
+  }
+  .btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 
+  /* ════════════════════════════════════════
+     INPUT — Recessed display well
+     ════════════════════════════════════════ */
   .input-field {
-    @apply w-full px-3 py-2 rounded-lg border border-slate-200;
-    @apply bg-white text-slate-800 text-sm;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500;
-    @apply placeholder:text-slate-400 transition-shadow duration-150;
+    @apply w-full px-3 py-2 text-sm;
+    border-radius: 0.5rem;
+    background: rgb(var(--lab-bg));
+    color: rgb(var(--lab-text));
+    border: 1px solid rgb(var(--lab-border));
+    box-shadow: inset 0 2px 4px rgba(0,0,0,var(--shadow-strength)), inset 0 0 0 1px rgba(0,0,0,0.05);
+    transition: box-shadow var(--timing-hover) ease, border-color var(--timing-hover) ease;
+  }
+  .input-field::placeholder { color: rgb(var(--lab-faint)); }
+  .input-field:focus {
+    outline: none;
+    border-color: rgb(var(--lab-accent));
+    box-shadow:
+      inset 0 2px 4px rgba(0,0,0,var(--shadow-strength)),
+      0 0 0 3px rgba(var(--lab-accent), 0.1);
   }
 
-  .card {
-    @apply bg-white rounded-xl border border-slate-200 shadow-sm;
+  /* ════════════════════════════════════════
+     BADGES — LED indicator lights
+     ════════════════════════════════════════ */
+  .badge-primer {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgb(var(--lab-accent));
+    color: #fff;
+    box-shadow: 0 0 6px rgba(var(--lab-accent), 0.35), inset 0 1px 2px rgba(255,255,255,0.25);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  .badge-probe {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgb(var(--lab-probe));
+    color: #fff;
+    box-shadow: 0 0 6px rgba(var(--lab-probe), 0.35), inset 0 1px 2px rgba(255,255,255,0.25);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
   }
 }
 
+/* ════════════════════════════════════════
+   ANIMATIONS
+   ════════════════════════════════════════ */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(var(--lab-danger), 0.45); }
+  70% { box-shadow: 0 0 0 6px rgba(var(--lab-danger), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--lab-danger), 0); }
 }
 
 .animate-pulse-ring {
   animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ════════════════════════════════════════
+   SELECT
+   ════════════════════════════════════════ */
+select.input-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b95a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 2rem;
+}
+select.input-field option {
+  background: rgb(var(--lab-surface));
+  color: rgb(var(--lab-text));
+}
+
+/* ════════════════════════════════════════
+   TABLE
+   ════════════════════════════════════════ */
+table { border-collapse: separate; border-spacing: 0; }
+thead th {
+  background: rgb(var(--lab-surface));
+  color: rgb(var(--lab-muted));
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgb(var(--lab-border-light));
+}
+tbody tr { transition: background var(--timing-hover) ease; }
+tbody tr:hover { background: var(--row-hover); }
+tbody td { border-bottom: 1px solid rgb(var(--lab-border)); }
+
+/* ════════════════════════════════════════
+   GRID SLOT CELL — Container-query adaptive font
+   Font size scales proportionally to cell width.
+   ════════════════════════════════════════ */
+.slot-cell {
+  container-type: inline-size;
+}
+.slot-name {
+  font-size: clamp(8px, 16cqw, 14px);
+}
+.slot-sub {
+  font-size: clamp(6px, 13cqw, 12px);
+}
+.slot-tag {
+  font-size: clamp(6px, 12cqw, 11px);
+}
+.slot-plus {
+  font-size: clamp(10px, 22cqw, 20px);
+}
+/* Hide secondary lines when cell is very small */
+@container (max-width: 48px) {
+  .slot-sub,
+  .slot-tag { display: none; }
 }

@@ -10,50 +10,45 @@ interface Props {
   readonly totalCols: number
 }
 
-export default function GridSlotCell({ slot, highlighted, isDragSource, isDropTarget, isHoverTarget, totalCols }: Props) {
+export default function GridSlotCell({ slot, highlighted, isDragSource, isDropTarget, isHoverTarget }: Props) {
   const { tube } = slot
   const isEmpty = !tube
   const isPrimer = tube?.primer_type === 'primer'
   const low = tube ? isLowVolume(tube.remaining_volume_ul, tube.initial_volume_ul) : false
 
-  // Adaptive font sizes based on grid density
-  const nameSize = totalCols <= 5 ? 'text-[11px]' : totalCols <= 9 ? 'text-[9px]' : 'text-[7px]'
-  const subSize = totalCols <= 5 ? 'text-[9px]' : totalCols <= 9 ? 'text-[8px]' : 'hidden'
-  const tagSize = totalCols <= 9 ? 'text-[7px]' : 'hidden'
-
   let base: string
   if (isEmpty) {
     base = isHoverTarget
-      ? 'bg-green-100 border-green-500 border-2 scale-105'
+      ? 'bg-lab-success/20 border-lab-success border-2 scale-105'
       : isDropTarget
-        ? 'bg-green-50 border-green-300 border-dashed'
-        : 'bg-gray-50 border-dashed border-slate-200'
+        ? 'bg-lab-success/10 border-lab-success border-dashed'
+        : 'bg-lab-bg border-dashed border-lab-border'
   } else if (isDragSource) {
-    base = 'bg-slate-100 border-slate-300 opacity-40 scale-90'
+    base = 'bg-lab-surface border-lab-border opacity-40 scale-90'
   } else {
-    base = isPrimer ? 'bg-blue-50 border-blue-300' : 'bg-orange-50 border-orange-300'
+    base = isPrimer ? 'bg-lab-accent/10 border-lab-accent/40' : 'bg-lab-probe/10 border-lab-probe/40'
   }
 
-  const lowClass = low && !isDragSource ? 'ring-2 ring-red-500 animate-pulse-ring' : ''
-  const highlightClass = highlighted && !isDragSource ? 'ring-2 ring-yellow-400 animate-pulse' : ''
+  const lowClass = low && !isDragSource ? 'ring-2 ring-lab-danger animate-pulse-ring' : ''
+  const highlightClass = highlighted && !isDragSource ? 'ring-2 ring-lab-warning animate-pulse' : ''
 
   return (
     <div
       data-row={slot.row}
       data-col={slot.col}
       data-empty={isEmpty ? '1' : undefined}
-      className={`aspect-square border rounded-lg flex flex-col items-center justify-center p-0.5 transition-all duration-150 text-center select-none overflow-hidden ${base} ${lowClass} ${highlightClass}`}
+      className={`slot-cell aspect-square border rounded-lg flex flex-col items-center justify-center p-0.5 transition-all duration-150 text-center select-none overflow-hidden ${base} ${lowClass} ${highlightClass}`}
     >
       {tube ? (
         <>
-          <span className={`${nameSize} leading-tight font-medium truncate block w-full`}>{tube.primer_name}</span>
-          <span className={`${subSize} leading-tight text-slate-400 truncate block w-full`}>{tube.batch_number}</span>
+          <span className="slot-name leading-tight font-medium text-lab-text truncate block w-full">{tube.primer_name}</span>
+          <span className="slot-sub leading-tight text-lab-muted truncate block w-full">{tube.batch_number}</span>
           {tube.tube_number && (
-            <span className={`${tagSize} leading-tight text-blue-400 truncate block w-full`}>#{tube.tube_number}</span>
+            <span className="slot-tag leading-tight text-lab-accent truncate block w-full">#{tube.tube_number}</span>
           )}
         </>
       ) : (
-        <span className={`${isDropTarget ? 'text-green-300' : 'text-slate-300'} ${totalCols <= 9 ? 'text-lg' : 'text-sm'}`}>+</span>
+        <span className={`slot-plus ${isDropTarget ? 'text-lab-success' : 'text-lab-faint'}`}>+</span>
       )}
     </div>
   )

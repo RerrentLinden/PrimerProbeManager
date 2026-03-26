@@ -87,7 +87,7 @@ export default function PrimerListPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-bold text-slate-800">引探管理</h1>
+        <h1 className="text-xl font-bold text-lab-text">引探管理</h1>
         <button type="button" className="btn-primary text-sm shrink-0" onClick={() => setShowCreate(true)}>
           新建引探
         </button>
@@ -102,7 +102,7 @@ export default function PrimerListPage() {
         <FilterSelect label="3'修饰" value={mod3Filter} options={[{ value: NONE_VALUE, label: '无修饰' }, ...mod3Options.map((m) => ({ value: m, label: m }))]} onChange={(v) => { setMod3Filter(v); resetPage() }} />
         <FilterSelect label="项目" value={projectFilter === '' ? '' : String(projectFilter)} options={projectOptions.map((p) => ({ value: String(p.id), label: p.name }))} onChange={(v) => { setProjectFilter(v ? Number(v) : ''); resetPage() }} />
         {hasFilters && (
-          <button type="button" className="text-xs text-slate-400 hover:text-red-500 px-2" onClick={() => { setTypeFilter(''); setMod5Filter(''); setMod3Filter(''); setProjectFilter(''); resetPage() }}>
+          <button type="button" className="text-xs text-lab-faint hover:text-lab-danger px-2" onClick={() => { setTypeFilter(''); setMod5Filter(''); setMod3Filter(''); setProjectFilter(''); resetPage() }}>
             清除
           </button>
         )}
@@ -140,7 +140,7 @@ function FilterSelect({ label, value, options, onChange }: {
   readonly label: string; readonly value: string; readonly options: { value: string; label: string }[]; readonly onChange: (v: string) => void
 }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className={`input-field text-xs w-auto pr-7 ${value ? 'border-blue-400 bg-blue-50' : ''}`}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={`input-field text-xs w-auto pr-7 ${value ? 'border-lab-accent bg-lab-accent/10' : ''}`}>
       <option value="">{label}: 全部</option>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
@@ -152,7 +152,7 @@ function Pagination({ page, totalPages, onPageChange }: { readonly page: number;
   return (
     <div className="flex items-center justify-center gap-2 pt-4">
       <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="btn-secondary text-xs px-3 py-1">上一页</button>
-      <span className="text-sm text-slate-500">{page} / {totalPages}</span>
+      <span className="text-sm text-lab-muted">{page} / {totalPages}</span>
       <button type="button" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className="btn-secondary text-xs px-3 py-1">下一页</button>
     </div>
   )

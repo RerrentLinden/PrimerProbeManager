@@ -87,12 +87,12 @@ function PrimerResults({ primers }: { readonly primers: SearchResults['primers']
   if (primers.length === 0) return null
   return (
     <section>
-      <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">引探 ({primers.length})</h3>
+      <h3 className="text-sm font-semibold text-lab-muted uppercase mb-3">引探 ({primers.length})</h3>
       <div className="space-y-2">
         {primers.map((p) => (
-          <Link key={p.id} to={`/primers/${p.id}`} className="card p-3 block hover:border-blue-300">
+          <Link key={p.id} to={`/primers/${p.id}`} className="card p-3 block hover:border-lab-accent/40">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-slate-800">{p.name}</span>
+              <span className="font-medium text-lab-text">{p.name}</span>
               <span className={p.type === 'probe' ? 'badge-probe' : 'badge-primer'}>
                 {p.type === 'probe' ? '探针' : '引物'}
               </span>
@@ -101,7 +101,7 @@ function PrimerResults({ primers }: { readonly primers: SearchResults['primers']
               <InlineMetaPill label="3'" value={displayValue(p.modification_3prime)} />
               <InlineMetaPill label="项目" value={formatProjectNames(p.projects)} />
             </div>
-            <p className="mt-2 font-sequence text-xs text-slate-600 break-all">{p.sequence}</p>
+            <p className="mt-2 font-sequence text-xs text-lab-muted break-all">{p.sequence}</p>
           </Link>
         ))}
       </div>
@@ -116,23 +116,23 @@ function TubeResults({ tubes, onTubeClick }: {
   if (tubes.length === 0) return null
   return (
     <section>
-      <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">分管 ({tubes.length})</h3>
+      <h3 className="text-sm font-semibold text-lab-muted uppercase mb-3">分管 ({tubes.length})</h3>
       <div className="space-y-2">
         {tubes.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => onTubeClick(t.position?.box_id, t.primer_id, t.batch_number || t.primer_name)}
-            className="card p-3 w-full text-left hover:border-blue-300"
+            className="card p-3 w-full text-left hover:border-lab-accent/40"
           >
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-slate-800">{t.primer_name}</span>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+              <span className="font-medium text-lab-text">{t.primer_name}</span>
+              <span className="inline-flex items-center rounded-full bg-lab-surface px-2 py-0.5 text-xs text-lab-muted">
                 批号 {formatTubeLabel(t.batch_number, t.tube_number)}
               </span>
             </div>
             {t.position && (
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-lab-muted">
                 {t.position.box_name} {positionLabel(t.position.row, t.position.col)}
               </p>
             )}
@@ -147,12 +147,12 @@ function BoxResults({ boxes }: { readonly boxes: SearchResults['boxes'] }) {
   if (boxes.length === 0) return null
   return (
     <section>
-      <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">冻存盒 ({boxes.length})</h3>
+      <h3 className="text-sm font-semibold text-lab-muted uppercase mb-3">冻存盒 ({boxes.length})</h3>
       <div className="space-y-2">
         {boxes.map((b) => (
-          <Link key={b.id} to={`/storage?box=${b.id}`} className="card p-3 block hover:border-blue-300">
-            <span className="font-medium text-slate-800">{b.name}</span>
-            <p className="mt-2 text-xs text-slate-500">
+          <Link key={b.id} to={`/storage?box=${b.id}`} className="card p-3 block hover:border-lab-accent/40">
+            <span className="font-medium text-lab-text">{b.name}</span>
+            <p className="mt-2 text-xs text-lab-muted">
               存放位置 {displayValue(b.storage_location)}
             </p>
           </Link>
@@ -166,11 +166,11 @@ function ProjectResults({ projects }: { readonly projects: SearchResults['projec
   if (projects.length === 0) return null
   return (
     <section>
-      <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">项目 ({projects.length})</h3>
+      <h3 className="text-sm font-semibold text-lab-muted uppercase mb-3">项目 ({projects.length})</h3>
       <div className="space-y-2">
         {projects.map((project) => (
-          <Link key={project.id} to={`/projects/${project.id}`} className="card p-3 block hover:border-blue-300">
-            <span className="font-medium text-slate-800">{project.name}</span>
+          <Link key={project.id} to={`/projects/${project.id}`} className="card p-3 block hover:border-lab-accent/40">
+            <span className="font-medium text-lab-text">{project.name}</span>
           </Link>
         ))}
       </div>
@@ -186,8 +186,8 @@ function InlineMetaPill({
   readonly value: string
 }) {
   return (
-    <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-      <span className="text-slate-400">{label}</span>
+    <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-lab-surface px-2 py-0.5 text-xs text-lab-muted">
+      <span className="text-lab-faint">{label}</span>
       <span className="truncate max-w-[22rem]">{value}</span>
     </span>
   )
