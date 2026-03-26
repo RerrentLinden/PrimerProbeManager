@@ -99,6 +99,9 @@
   ::-webkit-scrollbar-track { background: rgb(var(--scrollbar-track)); }
   ::-webkit-scrollbar-thumb { background: rgb(var(--scrollbar-thumb)); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgb(var(--lab-metal-light)); }
+
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 }
 
 @layer components {

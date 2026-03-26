@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Primer } from '@/types'
 import { truncateSequence, formatGcPercent } from '@/utils/format'
 
@@ -19,12 +19,33 @@ export default function PrimerCardList({ primers }: Props) {
             </span>
           </div>
           <CopyableSequence sequence={p.sequence} />
-          <div className="flex gap-4 text-xs text-lab-muted">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-lab-muted">
+            <span>MW: {p.mw?.toFixed(1) ?? '-'}</span>
             <span>Tm: {p.tm?.toFixed(1) ?? '-'}</span>
             <span>GC: {formatGcPercent(p.gc_percent)}</span>
             <span>管数: {p.active_tube_count ?? 0}</span>
           </div>
+          <ProjectTags projects={p.projects} />
         </Link>
+      ))}
+    </div>
+  )
+}
+
+function ProjectTags({ projects }: { readonly projects?: { id: number; name: string }[] }) {
+  const navigate = useNavigate()
+  if (!projects || projects.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {projects.map((proj) => (
+        <button
+          key={proj.id}
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/projects/${proj.id}`) }}
+          className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors"
+        >
+          {proj.name}
+        </button>
       ))}
     </div>
   )

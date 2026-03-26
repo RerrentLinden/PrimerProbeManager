@@ -122,7 +122,10 @@ function MobileCard({ primer, ...props }: SharedProps & { readonly primer: Proje
       </div>
 
       <div className="mt-3">
-        <ThresholdEditor primer={primer} {...props} />
+        <label className="block text-xs text-lab-muted mb-1">告警阈值</label>
+        <div className="max-w-[180px]">
+          <ThresholdEditor primer={primer} {...props} />
+        </div>
       </div>
     </div>
   )

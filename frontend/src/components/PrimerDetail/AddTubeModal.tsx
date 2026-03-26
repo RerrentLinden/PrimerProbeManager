@@ -77,15 +77,7 @@ export default function AddTubeModal({ open, primerId, onClose, onSuccess }: Pro
         </div>
         <div>
           <label className="block text-sm font-medium text-lab-muted mb-1">定容日期 *</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => {
-              setDate(e.target.value)
-              setError('')
-            }}
-            className="input-field"
-          />
+          <DateInput value={date} onChange={(v) => { setDate(v); setError('') }} />
         </div>
         <div>
           <label className="block text-sm font-medium text-lab-muted mb-1">产量 (uL) *</label>
@@ -116,6 +108,39 @@ export default function AddTubeModal({ open, primerId, onClose, onSuccess }: Pro
         </div>
       </div>
     </Modal>
+  )
+}
+
+function DateInput({ value, onChange }: { readonly value: string; readonly onChange: (iso: string) => void }) {
+  function toDisplay(iso: string): string {
+    if (!iso) return ''
+    const [y, m, d] = iso.split('-')
+    return `${m}/${d}/${y}`
+  }
+
+  function toISO(input: string): string {
+    const cleaned = input.replace(/[^0-9/]/g, '')
+    const parts = cleaned.split('/')
+    if (parts.length === 3 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`
+    }
+    return ''
+  }
+
+  function handleInput(raw: string) {
+    const iso = toISO(raw)
+    if (iso) onChange(iso)
+    else if (!raw) onChange('')
+  }
+
+  return (
+    <input
+      type="text"
+      value={toDisplay(value)}
+      onChange={(e) => handleInput(e.target.value)}
+      placeholder="MM/DD/YYYY"
+      className="input-field"
+    />
   )
 }
 

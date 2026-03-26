@@ -278,10 +278,25 @@ function MobileBoxSelector({ boxes, selectedId, onSelect, onCreateBox }: {
   readonly boxes: FreezerBox[]; readonly selectedId: number | null; readonly onSelect: (id: number) => void; readonly onCreateBox: () => void
 }) {
   return (
-    <div className="lg:hidden flex gap-2">
-      <select className="input-field flex-1" value={selectedId ?? ''} onChange={(e) => onSelect(Number(e.target.value))}>
-        {boxes.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-      </select>
+    <div className="lg:hidden flex items-center gap-2">
+      <div className="flex-1 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 pb-1">
+          {boxes.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              onClick={() => onSelect(b.id)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                b.id === selectedId
+                  ? 'border-lab-accent bg-lab-accent/10 text-lab-accent font-medium'
+                  : 'border-lab-border bg-lab-surface text-lab-muted hover:border-lab-border-light'
+              }`}
+            >
+              {b.name}
+            </button>
+          ))}
+        </div>
+      </div>
       <button type="button" className="btn-primary text-sm shrink-0" onClick={onCreateBox}>新冻存盒</button>
     </div>
   )
