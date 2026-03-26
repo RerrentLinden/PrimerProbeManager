@@ -205,28 +205,19 @@ export interface ProjectGeneCreate {
   readonly fluorescence_channel?: string | null
 }
 
-// --- Import ---
-export interface ImportPreview {
-  readonly new_primers: number
-  readonly update_primers: number
-  readonly new_tubes: number
-  readonly update_tubes: number
-  readonly conflicts: ImportConflict[]
-  readonly rows: ImportRow[]
-}
-
-export interface ImportConflict {
-  readonly row: number
-  readonly field: string
-  readonly message: string
-}
-
-export interface ImportRow {
-  readonly row_number: number
-  readonly status: 'new' | 'update' | 'conflict'
-  readonly data: Record<string, string>
-  readonly error?: string
-}
+// --- Import (re-export from importExport.ts) ---
+export type {
+  ImportAction,
+  ImportConflictStrategy,
+  PrimerConflictStrategy,
+  PrimerImportPreviewRow,
+  TubeImportPreviewRow,
+  ImportPreview,
+  PrimerConflictResolution,
+  ImportConfirmOptions,
+  ImportConfirmResult,
+  DatabaseBackupResult,
+} from './importExport'
 
 // --- Stats ---
 export interface Stats {
