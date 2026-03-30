@@ -34,10 +34,11 @@ interface Options<T> {
   readonly getId: (item: T) => number
   readonly getLabel: (item: T) => string
   readonly onReorder: (orderedIds: number[]) => Promise<void>
+  readonly horizontal?: boolean
 }
 
 export function useDragReorder<T>(opts: Options<T>): DragReorderResult<T> {
-  const { items: source, getId, getLabel, onReorder } = opts
+  const { items: source, getId, getLabel, onReorder, horizontal = false } = opts
   const [ordered, setOrdered] = useState<T[]>(() => [...source])
   const [drag, setDrag] = useState<DragState | null>(null)
 
@@ -75,7 +76,9 @@ export function useDragReorder<T>(opts: Options<T>): DragReorderResult<T> {
         if (id !== dragRef.current.itemId) {
           const rect = el.getBoundingClientRect()
           overId = id
-          position = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+          position = horizontal
+            ? (e.clientX < rect.left + rect.width / 2 ? 'before' : 'after')
+            : (e.clientY < rect.top + rect.height / 2 ? 'before' : 'after')
         }
       }
       setDrag(prev => prev ? { ...prev, x: e.clientX, y: e.clientY, overId, position } : null)

@@ -32,6 +32,7 @@ export default function ProjectListPage() {
     getId: p => p.id,
     getLabel: p => p.name,
     onReorder: async (ids) => { await reorderProjects(ids); await load() },
+    horizontal: true,
   })
 
   return (
@@ -54,7 +55,7 @@ export default function ProjectListPage() {
           {reorder.items.map((p) => (
             <div key={p.id} {...reorder.getItemProps(p.id)} className="relative select-none touch-none">
               {reorder.insertionAt(p.id) === 'before' && (
-                <div className="absolute -top-[3px] left-0 right-0 h-[3px] rounded bg-lab-accent" />
+                <div className="absolute -left-[3px] top-0 bottom-0 w-[3px] rounded bg-lab-accent" />
               )}
               <Link
                 to={`/projects/${p.id}`}
@@ -77,7 +78,7 @@ export default function ProjectListPage() {
                 </div>
               </Link>
               {reorder.insertionAt(p.id) === 'after' && (
-                <div className="absolute -bottom-[3px] left-0 right-0 h-[3px] rounded bg-lab-accent" />
+                <div className="absolute -right-[3px] top-0 bottom-0 w-[3px] rounded bg-lab-accent" />
               )}
             </div>
           ))}
