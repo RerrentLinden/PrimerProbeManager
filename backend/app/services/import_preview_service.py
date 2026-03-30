@@ -58,20 +58,26 @@ async def build_primer_decisions(
     existing_map = await load_primers_by_identities(
         session, (_primer_identity(row) for row in rows)
     )
+    seen_identities: set[PrimerIdentity] = set()
     decisions: list[PrimerDecision] = []
     for row in rows:
         identity = _primer_identity(row)
-        if identity in duplicates:
+        if identity in duplicates and identity in seen_identities:
+            suggested = await suggest_renamed_primer_name(
+                session, original_name=row.name, mw=row.mw,
+            )
             decisions.append(
                 PrimerDecision(
                     row=row,
                     identity=identity,
-                    action="error",
-                    message="模板内存在重复的 名称+MW",
-                    existing=None,
+                    action="conflict",
+                    message="模板内存在重复的 名称+MW（可跳过或重命名）",
+                    existing=existing_map.get(identity),
+                    suggested_name=suggested,
                 )
             )
             continue
+        seen_identities.add(identity)
         existing = existing_map.get(identity)
         if existing is None:
             decisions.append(PrimerDecision(row, identity, "create", "新增", None))
@@ -133,7 +139,10 @@ async def _build_tube_preview_rows(
     primer_decisions: list[PrimerDecision],
 ) -> list[TubePreviewRow]:
     duplicates = _duplicate_tube_keys(rows)
-    decision_by_identity = {item.identity: item for item in primer_decisions}
+    decision_by_identity: dict[PrimerIdentity, PrimerDecision] = {}
+    for item in primer_decisions:
+        if item.identity not in decision_by_identity:
+            decision_by_identity[item.identity] = item
     db_primers = await load_primers_by_identities(
         session, (_tube_identity(row) for row in rows)
     )
