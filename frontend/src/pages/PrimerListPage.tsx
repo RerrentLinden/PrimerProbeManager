@@ -159,11 +159,32 @@ function FilterSelect({ label, value, options, onChange }: {
 
 function Pagination({ page, totalPages, onPageChange }: { readonly page: number; readonly totalPages: number; readonly onPageChange: (p: number) => void }) {
   if (totalPages <= 1) return null
+  const pages: (number | '...')[] = []
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...')
+    }
+  }
   return (
-    <div className="flex items-center justify-center gap-2 pt-4">
-      <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="btn-secondary text-xs px-3 py-1">上一页</button>
-      <span className="text-sm text-lab-muted">{page} / {totalPages}</span>
-      <button type="button" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className="btn-secondary text-xs px-3 py-1">下一页</button>
+    <div className="flex items-center justify-center gap-1.5 pt-4">
+      <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="btn-secondary text-xs px-2.5 py-1">上一页</button>
+      {pages.map((p, i) =>
+        p === '...' ? (
+          <span key={`e${i}`} className="text-xs text-lab-muted px-1">...</span>
+        ) : (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onPageChange(p)}
+            className={`text-xs px-2.5 py-1 rounded transition-colors ${p === page ? 'bg-lab-accent text-white' : 'btn-secondary'}`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button type="button" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className="btn-secondary text-xs px-2.5 py-1">下一页</button>
     </div>
   )
 }
