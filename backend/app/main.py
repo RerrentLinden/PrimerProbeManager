@@ -87,7 +87,7 @@ def _migrate_project_genes_constraint(conn) -> None:
             "INSERT INTO project_genes (id, project_id, gene_name, tube_number, fluorescence_channel, sort_order) "
             "SELECT id, project_id, gene_name, tube_number, fluorescence_channel, sort_order FROM project_genes_old"
         )
-        conn.exec_driver_sql("CREATE INDEX ix_project_genes_project_id ON project_genes(project_id)")
+        conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_project_genes_project_id ON project_genes(project_id)")
         conn.exec_driver_sql("DROP TABLE project_genes_old")
         conn.exec_driver_sql("PRAGMA legacy_alter_table=OFF")
         conn.exec_driver_sql("PRAGMA foreign_keys=ON")
