@@ -148,7 +148,7 @@ function ProjectTags({ projects }: { readonly projects?: { id: number; name: str
       <Link
         to={`/projects/${first.id}`}
         draggable={false}
-        className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors truncate max-w-[80px]"
+        className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors truncate"
         title={first.name}
       >
         {first.name}
