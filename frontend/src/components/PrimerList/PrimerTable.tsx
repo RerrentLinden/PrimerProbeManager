@@ -94,18 +94,7 @@ function PrimerRow({ primer: p, insertion, colCount, reorder, onRefresh }: {
           </span>
         </td>
         <td className="py-3 pr-3">
-          <div className="flex flex-wrap gap-1">
-            {(p.projects ?? []).map((proj) => (
-              <Link
-                key={proj.id}
-                to={`/projects/${proj.id}`}
-                className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors"
-              >
-                {proj.name}
-              </Link>
-            ))}
-            {(!p.projects || p.projects.length === 0) && <span className="text-xs text-lab-faint">-</span>}
-          </div>
+          <ProjectTags projects={p.projects} />
         </td>
         <td className="py-3 pr-3 tabular-nums text-lab-muted truncate">{p.mw?.toFixed(1) ?? '-'}</td>
         <td className="py-3 pr-3 tabular-nums text-lab-muted">{p.tm?.toFixed(1) ?? '-'}</td>
@@ -135,5 +124,49 @@ function CopyableSequence({ sequence }: { readonly sequence: string }) {
     >
       {copied ? <span className="text-lab-success">已复制 ✓</span> : sequence}
     </button>
+  )
+}
+
+const MAX_VISIBLE_TAGS = 2
+
+function ProjectTags({ projects }: { readonly projects?: { id: number; name: string }[] }) {
+  const [expanded, setExpanded] = useState(false)
+  if (!projects || projects.length === 0) return <span className="text-xs text-lab-faint">-</span>
+
+  const visible = expanded ? projects : projects.slice(0, MAX_VISIBLE_TAGS)
+  const overflow = projects.length - MAX_VISIBLE_TAGS
+
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {visible.map((proj) => (
+        <Link
+          key={proj.id}
+          to={`/projects/${proj.id}`}
+          draggable={false}
+          className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors truncate max-w-[100px]"
+          title={proj.name}
+        >
+          {proj.name}
+        </Link>
+      ))}
+      {overflow > 0 && !expanded && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
+          className="text-xs text-lab-accent/70 hover:text-lab-accent px-1"
+        >
+          +{overflow}
+        </button>
+      )}
+      {expanded && overflow > 0 && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setExpanded(false) }}
+          className="text-xs text-lab-faint hover:text-lab-accent px-1"
+        >
+          收起
+        </button>
+      )}
+    </div>
   )
 }
