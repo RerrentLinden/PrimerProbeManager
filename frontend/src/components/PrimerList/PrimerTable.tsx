@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import type { Primer } from '@/types'
 import { formatGcPercent } from '@/utils/format'
@@ -127,45 +127,54 @@ function CopyableSequence({ sequence }: { readonly sequence: string }) {
   )
 }
 
-const MAX_VISIBLE_TAGS = 2
-
 function ProjectTags({ projects }: { readonly projects?: { id: number; name: string }[] }) {
-  const [expanded, setExpanded] = useState(false)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('pointerdown', handler)
+    return () => document.removeEventListener('pointerdown', handler)
+  }, [open])
+
   if (!projects || projects.length === 0) return <span className="text-xs text-lab-faint">-</span>
 
-  const visible = expanded ? projects : projects.slice(0, MAX_VISIBLE_TAGS)
-  const overflow = projects.length - MAX_VISIBLE_TAGS
+  const first = projects[0]
+  const rest = projects.length - 1
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      {visible.map((proj) => (
-        <Link
-          key={proj.id}
-          to={`/projects/${proj.id}`}
-          draggable={false}
-          className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors truncate max-w-[100px]"
-          title={proj.name}
-        >
-          {proj.name}
-        </Link>
-      ))}
-      {overflow > 0 && !expanded && (
+    <div ref={ref} className="relative flex items-center gap-1">
+      <Link
+        to={`/projects/${first.id}`}
+        draggable={false}
+        className="text-xs bg-lab-raised text-lab-muted px-1.5 py-0.5 rounded hover:bg-lab-accent/10 hover:text-lab-accent transition-colors truncate max-w-[80px]"
+        title={first.name}
+      >
+        {first.name}
+      </Link>
+      {rest > 0 && (
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
-          className="text-xs text-lab-accent/70 hover:text-lab-accent px-1"
+          onClick={(e) => { e.stopPropagation(); setOpen(!open) }}
+          className="text-[10px] leading-none bg-lab-accent/15 text-lab-accent font-medium w-5 h-5 rounded-full flex items-center justify-center hover:bg-lab-accent/25 transition-colors"
         >
-          +{overflow}
+          +{rest}
         </button>
       )}
-      {expanded && overflow > 0 && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setExpanded(false) }}
-          className="text-xs text-lab-faint hover:text-lab-accent px-1"
-        >
-          收起
-        </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 z-40 bg-lab-raised border border-lab-border rounded-lg shadow-panel-lg py-1 min-w-[140px] max-h-[200px] overflow-y-auto">
+          {projects.map((proj) => (
+            <Link
+              key={proj.id}
+              to={`/projects/${proj.id}`}
+              draggable={false}
+              className="block px-3 py-1.5 text-xs text-lab-text hover:bg-lab-highlight transition-colors"
+            >
+              {proj.name}
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   )
