@@ -5,8 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-DEFAULT_ROWS = 9
-DEFAULT_COLS = 9
+DEFAULT_ROWS = 10
+DEFAULT_COLS = 10
 
 
 def _utcnow() -> datetime:

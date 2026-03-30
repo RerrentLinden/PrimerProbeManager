@@ -8,8 +8,8 @@ export const SEARCH_DEBOUNCE_MS = 300
 
 export const SEQUENCE_DISPLAY_LENGTH = 30
 
-export const DEFAULT_BOX_ROWS = 9
-export const DEFAULT_BOX_COLS = 9
+export const DEFAULT_BOX_ROWS = 10
+export const DEFAULT_BOX_COLS = 10
 
 export const FLUORESCENCE_CHANNELS = [
   "5'6-FAM",

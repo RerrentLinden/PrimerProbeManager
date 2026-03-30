@@ -4,8 +4,8 @@ from pydantic import BaseModel
 
 class BoxCreate(BaseModel):
     name: str
-    rows: int = 9
-    cols: int = 9
+    rows: int = 10
+    cols: int = 10
     storage_location: str | None = None
     storage_temperature: str | None = None
 
