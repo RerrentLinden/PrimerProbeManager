@@ -100,7 +100,7 @@ export default function TubeLifecycleLogsPage() {
           disabled={loading || exporting}
           onClick={handleExport}
         >
-          {exporting ? '导出中...' : '导出 TXT'}
+          {exporting ? '导出中...' : '导出日志'}
         </button>
       </div>
 
