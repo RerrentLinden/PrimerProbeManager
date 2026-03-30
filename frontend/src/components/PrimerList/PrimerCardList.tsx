@@ -9,9 +9,10 @@ import type { DragReorderResult } from '@/hooks/useDragReorder'
 interface Props {
   readonly primers: Primer[]
   readonly reorder?: DragReorderResult<Primer>
+  readonly onRefresh?: () => void
 }
 
-export default function PrimerCardList({ primers, reorder }: Props) {
+export default function PrimerCardList({ primers, reorder, onRefresh }: Props) {
   return (
     <div className="md:hidden space-y-3">
       {primers.map((p) => {
@@ -28,7 +29,7 @@ export default function PrimerCardList({ primers, reorder }: Props) {
                 <div className="flex items-center gap-2">
                   <SortOrderBadge
                     value={p.sort_order}
-                    onCommit={(n) => movePrimerSortOrder(p.id, n).then(() => location.reload())}
+                    onCommit={(n) => movePrimerSortOrder(p.id, n).then(() => onRefresh?.())}
                   />
                   <span className="font-medium text-lab-text">{p.name}</span>
                 </div>

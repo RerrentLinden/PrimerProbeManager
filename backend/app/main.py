@@ -76,7 +76,7 @@ def _ensure_sort_order_column(conn, table_name: str) -> None:
     conn.exec_driver_sql(
         f"UPDATE {table_name} SET sort_order = ("
         f"SELECT COUNT(*) FROM {table_name} AS t2 "
-        f"WHERE t2.id <= {table_name}.id)"
+        f"WHERE t2.id >= {table_name}.id)"
     )
 
 
@@ -184,6 +184,13 @@ def _rebuild_primers_table(conn) -> None:
         "CONSTRAINT uq_primer_name_mw UNIQUE (name, mw)"
         ")"
     )
+    old_cols = {
+        c["name"]
+        for c in conn.exec_driver_sql(
+            "PRAGMA table_info('primers_old')"
+        ).mappings().all()
+    }
+    sort_expr = "sort_order" if "sort_order" in old_cols else "0"
     conn.exec_driver_sql(
         "INSERT INTO primers ("
         "id, name, sequence, base_count, modification_5prime, modification_3prime, "
@@ -193,11 +200,12 @@ def _rebuild_primers_table(conn) -> None:
         "SELECT "
         "id, name, sequence, base_count, modification_5prime, modification_3prime, "
         "mw, ug_per_od, nmol_per_od, gc_percent, tm, purification_method, "
-        "low_volume_alert_threshold_ul, "
-        "COALESCE(sort_order, 0), created_at, updated_at "
+        f"low_volume_alert_threshold_ul, {sort_expr}, created_at, updated_at "
         "FROM primers_old"
     )
     conn.exec_driver_sql("CREATE INDEX ix_primers_name ON primers(name)")
+    if sort_expr == "0":
+        _ensure_sort_order_column(conn, "primers")
     conn.exec_driver_sql("DROP TABLE primers_old")
     conn.exec_driver_sql("PRAGMA legacy_alter_table=OFF")
     conn.exec_driver_sql("PRAGMA foreign_keys=ON")

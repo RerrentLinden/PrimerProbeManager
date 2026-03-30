@@ -9,9 +9,10 @@ interface Props {
   readonly onSelect: (id: number) => void
   readonly onCreateBox: () => void
   readonly reorder?: DragReorderResult<FreezerBox>
+  readonly onRefresh?: () => void
 }
 
-export default function BoxList({ boxes, selectedId, onSelect, onCreateBox, reorder }: Props) {
+export default function BoxList({ boxes, selectedId, onSelect, onCreateBox, reorder, onRefresh }: Props) {
   return (
     <div className="space-y-3">
       <button type="button" className="btn-primary w-full text-sm" onClick={onCreateBox}>
@@ -25,17 +26,19 @@ export default function BoxList({ boxes, selectedId, onSelect, onCreateBox, reor
           isSelected={box.id === selectedId}
           onSelect={() => onSelect(box.id)}
           reorder={reorder}
+          onRefresh={onRefresh}
         />
       ))}
     </div>
   )
 }
 
-function BoxCard({ box, isSelected, onSelect, reorder }: {
+function BoxCard({ box, isSelected, onSelect, reorder, onRefresh }: {
   readonly box: FreezerBox
   readonly isSelected: boolean
   readonly onSelect: () => void
   readonly reorder?: DragReorderResult<FreezerBox>
+  readonly onRefresh?: () => void
 }) {
   const capacity = box.rows * box.cols
   const occupied = box.occupied_count ?? 0
@@ -57,7 +60,7 @@ function BoxCard({ box, isSelected, onSelect, reorder }: {
         <div className="flex items-center gap-1.5 font-medium text-sm">
           <SortOrderBadge
             value={box.sort_order}
-            onCommit={(n) => { moveBoxSortOrder(box.id, n).then(() => location.reload()) }}
+            onCommit={(n) => { moveBoxSortOrder(box.id, n).then(() => onRefresh?.()) }}
           />
           {box.name}
         </div>

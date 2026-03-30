@@ -160,7 +160,7 @@ export default function StoragePage() {
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       <div className="lg:w-64 shrink-0">
         <div className="hidden lg:block">
-          <BoxList boxes={boxReorder.items} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} reorder={boxReorder} />
+          <BoxList boxes={boxReorder.items} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} reorder={boxReorder} onRefresh={loadBoxes} />
         </div>
         <MobileBoxSelector boxes={boxReorder.items} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} reorder={boxReorder} />
       </div>

@@ -9,6 +9,7 @@ import type { DragReorderResult } from '@/hooks/useDragReorder'
 interface Props {
   readonly primers: Primer[]
   readonly reorder?: DragReorderResult<Primer>
+  readonly onRefresh?: () => void
 }
 
 function formatModifications(p: Primer): string {
@@ -18,7 +19,7 @@ function formatModifications(p: Primer): string {
   return parts.join(' / ')
 }
 
-export default function PrimerTable({ primers, reorder }: Props) {
+export default function PrimerTable({ primers, reorder, onRefresh }: Props) {
   return (
     <div className="hidden md:block overflow-x-auto">
       <table className="w-full text-sm table-fixed">
@@ -41,7 +42,7 @@ export default function PrimerTable({ primers, reorder }: Props) {
             const insertion = reorder?.insertionAt(p.id)
             const COL_COUNT = 10
             return (
-              <PrimerRow key={p.id} primer={p} insertion={insertion} colCount={COL_COUNT} reorder={reorder} />
+              <PrimerRow key={p.id} primer={p} insertion={insertion} colCount={COL_COUNT} reorder={reorder} onRefresh={onRefresh} />
             )
           })}
         </tbody>
@@ -56,11 +57,12 @@ function InsertionLine({ colCount }: { readonly colCount: number }) {
   )
 }
 
-function PrimerRow({ primer: p, insertion, colCount, reorder }: {
+function PrimerRow({ primer: p, insertion, colCount, reorder, onRefresh }: {
   readonly primer: Primer
   readonly insertion: 'before' | 'after' | null | undefined
   readonly colCount: number
   readonly reorder?: DragReorderResult<Primer>
+  readonly onRefresh?: () => void
 }) {
   return (
     <>
@@ -72,7 +74,7 @@ function PrimerRow({ primer: p, insertion, colCount, reorder }: {
         <td className="py-3 pr-3">
           <SortOrderBadge
             value={p.sort_order}
-            onCommit={(n) => movePrimerSortOrder(p.id, n).then(() => location.reload())}
+            onCommit={(n) => movePrimerSortOrder(p.id, n).then(() => onRefresh?.())}
           />
         </td>
         <td className="py-3 pr-3 truncate">

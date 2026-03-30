@@ -133,8 +133,8 @@ export default function PrimerListPage() {
         />
       ) : (
         <>
-          <PrimerTable primers={reorder.items} reorder={reorder} />
-          <PrimerCardList primers={reorder.items} reorder={reorder} />
+          <PrimerTable primers={reorder.items} reorder={reorder} onRefresh={loadPrimers} />
+          <PrimerCardList primers={reorder.items} reorder={reorder} onRefresh={loadPrimers} />
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
