@@ -35,6 +35,9 @@ def _migrate(conn) -> None:
             ))
         _migrate_primer_identity_indexes(conn)
 
+    if "project_genes" in insp.get_table_names():
+        _migrate_project_genes_constraint(conn)
+
     if "project_primers" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("project_primers")}
         if "primer_id" not in cols:
@@ -49,6 +52,45 @@ def _migrate(conn) -> None:
             ))
             conn.execute(text("CREATE INDEX ix_project_primers_project_id ON project_primers(project_id)"))
             conn.execute(text("CREATE INDEX ix_project_primers_primer_id ON project_primers(primer_id)"))
+
+
+def _migrate_project_genes_constraint(conn) -> None:
+    """Replace uq_project_gene(project_id, gene_name) with uq_project_gene_position(project_id, tube_number, fluorescence_channel)."""
+    unique_indexes = _list_unique_indexes(conn, "project_genes")
+    has_old = any(set(cols) == {"project_id", "gene_name"} for _, cols in unique_indexes)
+    has_new = any(set(cols) == {"project_id", "tube_number", "fluorescence_channel"} for _, cols in unique_indexes)
+    if not has_old or has_new:
+        return
+    old_name = next(name for name, cols in unique_indexes if set(cols) == {"project_id", "gene_name"})
+    if not old_name.startswith("sqlite_autoindex"):
+        conn.exec_driver_sql(f'DROP INDEX "{old_name}"')
+        conn.exec_driver_sql(
+            "CREATE UNIQUE INDEX uq_project_gene_position "
+            "ON project_genes(project_id, tube_number, fluorescence_channel)"
+        )
+    else:
+        conn.exec_driver_sql("PRAGMA foreign_keys=OFF")
+        conn.exec_driver_sql("PRAGMA legacy_alter_table=ON")
+        conn.exec_driver_sql("ALTER TABLE project_genes RENAME TO project_genes_old")
+        conn.exec_driver_sql(
+            "CREATE TABLE project_genes ("
+            "id INTEGER NOT NULL PRIMARY KEY,"
+            "project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,"
+            "gene_name VARCHAR NOT NULL,"
+            "tube_number INTEGER,"
+            "fluorescence_channel VARCHAR,"
+            "sort_order INTEGER NOT NULL DEFAULT 0,"
+            "CONSTRAINT uq_project_gene_position UNIQUE (project_id, tube_number, fluorescence_channel)"
+            ")"
+        )
+        conn.exec_driver_sql(
+            "INSERT INTO project_genes (id, project_id, gene_name, tube_number, fluorescence_channel, sort_order) "
+            "SELECT id, project_id, gene_name, tube_number, fluorescence_channel, sort_order FROM project_genes_old"
+        )
+        conn.exec_driver_sql("CREATE INDEX ix_project_genes_project_id ON project_genes(project_id)")
+        conn.exec_driver_sql("DROP TABLE project_genes_old")
+        conn.exec_driver_sql("PRAGMA legacy_alter_table=OFF")
+        conn.exec_driver_sql("PRAGMA foreign_keys=ON")
 
 
 def _migrate_primer_identity_indexes(conn) -> None:

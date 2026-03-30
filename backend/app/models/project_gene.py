@@ -7,7 +7,7 @@ from app.database import Base
 class ProjectGene(Base):
     __tablename__ = "project_genes"
     __table_args__ = (
-        UniqueConstraint("project_id", "gene_name", name="uq_project_gene"),
+        UniqueConstraint("project_id", "tube_number", "fluorescence_channel", name="uq_project_gene_position"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
