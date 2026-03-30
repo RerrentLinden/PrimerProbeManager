@@ -91,13 +91,12 @@ export default function Sidebar() {
             const idx = THEME_OPTIONS.findIndex((o) => o.value === mode)
             setMode(THEME_OPTIONS[(idx + 1) % THEME_OPTIONS.length].value)
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-lab-bg text-lab-muted hover:text-lab-text text-[11px] font-medium transition-colors shadow-recess"
-          title="切换主题"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-lab-bg text-lab-muted hover:text-lab-text transition-colors shadow-recess"
+          title={THEME_OPTIONS.find((o) => o.value === mode)?.label}
         >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={THEME_OPTIONS.find((o) => o.value === mode)?.icon} />
           </svg>
-          <span>{THEME_OPTIONS.find((o) => o.value === mode)?.label}</span>
         </button>
       </div>
     </aside>
