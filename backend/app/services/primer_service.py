@@ -11,6 +11,7 @@ from app.models.project import Project
 from app.models.project_primer import ProjectPrimer
 from app.schemas.primer import PrimerCreate, PrimerUpdate
 from app.services.primer_metrics import calculate_gc_percent, count_bases
+from app.services import sort_ordering
 
 
 async def list_primers(
@@ -58,7 +59,7 @@ async def list_primers(
 
     total = (await session.execute(count_query)).scalar_one()
     query = (
-        query.order_by(Primer.id.desc())
+        query.order_by(Primer.sort_order.asc(), Primer.id.asc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .options(selectinload(Primer.tubes))
@@ -123,6 +124,7 @@ async def get_primer(session: AsyncSession, primer_id: int) -> Primer | None:
 async def create_primer(session: AsyncSession, data: PrimerCreate) -> Primer:
     payload = _build_create_payload(data)
     await _ensure_unique_identity(session, name=payload["name"], mw=payload["mw"])
+    payload["sort_order"] = await sort_ordering.next_sort_order(session, Primer)
     primer = Primer(**payload)
     session.add(primer)
     await _commit_primer(session)
@@ -157,8 +159,29 @@ async def update_primer(
     return loaded_primer
 
 
+async def reorder_primers(
+    session: AsyncSession, primer_ids: list[int],
+) -> None:
+    await sort_ordering.reorder_subset(
+        session, Primer, primer_ids, entity_label="引探",
+    )
+    await session.commit()
+
+
+async def move_primer(
+    session: AsyncSession, primer_id: int, target_sort_order: int,
+) -> None:
+    await sort_ordering.move_item(
+        session, Primer, primer_id, target_sort_order, entity_label="引探",
+    )
+    await session.commit()
+
+
 async def delete_primer(session: AsyncSession, primer: Primer) -> None:
+    old_order = primer.sort_order
     await session.delete(primer)
+    await session.flush()
+    await sort_ordering.compact_after_delete(session, Primer, old_order)
     await session.commit()
 
 

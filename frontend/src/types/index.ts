@@ -16,6 +16,7 @@ export interface Primer {
   readonly active_tube_count?: number
   readonly total_remaining_volume_ul?: number
   readonly low_volume_alert_threshold_ul?: number | null
+  readonly sort_order: number
   readonly projects?: { id: number; name: string }[]
   readonly created_at: string
   readonly updated_at: string
@@ -142,6 +143,7 @@ export interface FreezerBox {
   readonly cols: number
   readonly storage_location: string | null
   readonly storage_temperature: string | null
+  readonly sort_order: number
   readonly created_at: string
   readonly updated_at: string
   readonly occupied_count?: number
@@ -177,6 +179,7 @@ export interface Project {
   readonly id: number
   readonly name: string
   readonly description: string | null
+  readonly sort_order: number
   readonly created_at: string
   readonly updated_at: string
   readonly primer_count?: number

@@ -18,8 +18,17 @@ class BoxUpdate(BaseModel):
     storage_temperature: str | None = None
 
 
+class BoxReorderRequest(BaseModel):
+    ordered_ids: list[int]
+
+
+class BoxSortMoveRequest(BaseModel):
+    sort_order: int
+
+
 class BoxResponse(BaseModel):
     id: int
+    sort_order: int
     name: str
     rows: int
     cols: int

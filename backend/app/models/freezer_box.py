@@ -22,6 +22,7 @@ class FreezerBox(Base):
     cols: Mapped[int] = mapped_column(Integer, default=DEFAULT_COLS)
     storage_location: Mapped[str | None] = mapped_column(String, nullable=True)
     storage_temperature: Mapped[str | None] = mapped_column(String, nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(),
     )

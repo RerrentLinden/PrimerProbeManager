@@ -6,6 +6,7 @@ from app.database import get_session
 from app.schemas.primer import (
     PrimerCreate, PrimerUpdate, PrimerResponse,
     PrimerListResponse, PrimerDetailResponse,
+    PrimerReorderRequest, PrimerMoveRequest,
 )
 from app.schemas.tube import TubeResponse
 from app.services import primer_service, project_service
@@ -66,6 +67,15 @@ async def list_primers(
     )
 
 
+@router.put("/reorder")
+async def reorder_primers(
+    body: PrimerReorderRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    await primer_service.reorder_primers(session, body.ordered_ids)
+    return {"ok": True}
+
+
 @router.post("", response_model=PrimerResponse, status_code=status.HTTP_201_CREATED)
 async def create_primer(
     body: PrimerCreate,
@@ -87,6 +97,16 @@ async def get_primer(
     proj_list = await project_service.get_primer_projects(session, primer.id)
     resp = _to_response(primer, proj_list)
     return PrimerDetailResponse(**resp.model_dump(), tubes=tubes)
+
+
+@router.put("/{primer_id}/sort-order")
+async def move_primer_sort_order(
+    primer_id: int,
+    body: PrimerMoveRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    await primer_service.move_primer(session, primer_id, body.sort_order)
+    return {"ok": True}
 
 
 @router.put("/{primer_id}", response_model=PrimerResponse)
@@ -117,7 +137,8 @@ async def delete_primer(
 def _to_response(p, proj_list: list[dict]) -> PrimerResponse:
     active_tubes = [tube for tube in p.tubes if tube.status == "active"] if p.tubes else []
     return PrimerResponse(
-        id=p.id, name=p.name, sequence=p.sequence,
+        id=p.id, sort_order=p.sort_order,
+        name=p.name, sequence=p.sequence,
         base_count=p.base_count, type=p.type,
         modification_5prime=p.modification_5prime,
         modification_3prime=p.modification_3prime,

@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchPrimers, fetchModifications } from '@/api/primers'
+import { fetchPrimers, fetchModifications, reorderPrimers } from '@/api/primers'
 import { fetchStats, fetchLowVolumeAlerts } from '@/api/stats'
 import { fetchProjects } from '@/api/projects'
 import type { Primer, Stats, LowVolumeAlert, Project } from '@/types'
 import { PAGE_SIZE } from '@/utils/constants'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useDragReorder } from '@/hooks/useDragReorder'
 import StatCards from '@/components/PrimerList/StatCards'
 import PrimerTable from '@/components/PrimerList/PrimerTable'
 import PrimerCardList from '@/components/PrimerList/PrimerCardList'
 import AlertDrawer from '@/components/PrimerList/AlertDrawer'
 import CreatePrimerModal from '@/components/PrimerList/CreatePrimerModal'
+import DragGhost from '@/components/common/DragGhost'
 import EmptyState from '@/components/common/EmptyState'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
@@ -71,6 +73,13 @@ export default function PrimerListPage() {
 
   useEffect(() => { loadPrimers() }, [loadPrimers])
 
+  const reorder = useDragReorder({
+    items: primers,
+    getId: p => p.id,
+    getLabel: p => p.name,
+    onReorder: async (ids) => { await reorderPrimers(ids); await loadPrimers() },
+  })
+
   const resetPage = useCallback(() => setPage(1), [])
   const handleCreateSuccess = useCallback(() => {
     loadSummary()
@@ -124,12 +133,13 @@ export default function PrimerListPage() {
         />
       ) : (
         <>
-          <PrimerTable primers={primers} />
-          <PrimerCardList primers={primers} />
+          <PrimerTable primers={reorder.items} reorder={reorder} />
+          <PrimerCardList primers={reorder.items} reorder={reorder} />
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 
+      {reorder.drag && <DragGhost label={reorder.drag.label} x={reorder.drag.x} y={reorder.drag.y} />}
       <AlertDrawer open={showAlerts} alerts={alerts} onClose={() => setShowAlerts(false)} />
       <CreatePrimerModal open={showCreate} onClose={() => setShowCreate(false)} onSuccess={handleCreateSuccess} />
     </div>

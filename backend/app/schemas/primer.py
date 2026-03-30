@@ -35,8 +35,17 @@ class PrimerProjectInfo(BaseModel):
     name: str
 
 
+class PrimerReorderRequest(BaseModel):
+    ordered_ids: list[int]
+
+
+class PrimerMoveRequest(BaseModel):
+    sort_order: int
+
+
 class PrimerResponse(BaseModel):
     id: int
+    sort_order: int
     name: str
     sequence: str
     base_count: int

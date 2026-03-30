@@ -35,3 +35,11 @@ export function deletePrimer(id: number) {
 export function fetchModifications() {
   return client.get<{ five_prime: string[]; three_prime: string[] }>('/primers/modifications')
 }
+
+export function reorderPrimers(orderedIds: number[]) {
+  return client.put('/primers/reorder', { ordered_ids: orderedIds })
+}
+
+export function movePrimerSortOrder(id: number, sortOrder: number) {
+  return client.put(`/primers/${id}/sort-order`, { sort_order: sortOrder })
+}

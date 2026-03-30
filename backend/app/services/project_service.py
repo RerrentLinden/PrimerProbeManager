@@ -10,12 +10,13 @@ from app.models.primer import Primer
 from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectGeneCreate, ProjectGeneUpdate,
 )
+from app.services import sort_ordering
 
 
 async def list_projects(
     session: AsyncSession, *, search: str | None = None,
 ) -> list[dict]:
-    query = select(Project).order_by(Project.id.desc())
+    query = select(Project).order_by(Project.sort_order.asc(), Project.id.asc())
     if search:
         query = query.where(Project.name.ilike(f"%{search}%"))
     projects = (await session.execute(query)).scalars().all()
@@ -60,7 +61,9 @@ async def get_project(session: AsyncSession, project_id: int) -> dict | None:
 async def create_project(
     session: AsyncSession, data: ProjectCreate,
 ) -> Project:
-    project = Project(**data.model_dump())
+    payload = data.model_dump()
+    payload["sort_order"] = await sort_ordering.next_sort_order(session, Project)
+    project = Project(**payload)
     session.add(project)
     await session.commit()
     await session.refresh(project)
@@ -77,6 +80,24 @@ async def update_project(
     return project
 
 
+async def reorder_projects(
+    session: AsyncSession, project_ids: list[int],
+) -> None:
+    await sort_ordering.reorder_subset(
+        session, Project, project_ids, entity_label="项目",
+    )
+    await session.commit()
+
+
+async def move_project(
+    session: AsyncSession, project_id: int, target_sort_order: int,
+) -> None:
+    await sort_ordering.move_item(
+        session, Project, project_id, target_sort_order, entity_label="项目",
+    )
+    await session.commit()
+
+
 async def delete_project(session: AsyncSession, project: Project) -> None:
     counts = await _get_counts(session, project.id)
     if counts["primer_count"] > 0:
@@ -84,7 +105,10 @@ async def delete_project(session: AsyncSession, project: Project) -> None:
             status.HTTP_409_CONFLICT,
             detail="项目仍有关联引物探针，请先解除关联后再删除",
         )
+    old_order = project.sort_order
     await session.delete(project)
+    await session.flush()
+    await sort_ordering.compact_after_delete(session, Project, old_order)
     await session.commit()
 
 
@@ -127,16 +151,14 @@ async def get_primer_projects(
 async def add_gene(
     session: AsyncSession, project_id: int, data: ProjectGeneCreate,
 ) -> ProjectGene:
-    max_order = (
-        await session.execute(
-            select(func.coalesce(func.max(ProjectGene.sort_order), -1))
-            .where(ProjectGene.project_id == project_id)
-        )
-    ).scalar_one()
+    next_order = await sort_ordering.next_sort_order(
+        session, ProjectGene,
+        filters=(ProjectGene.project_id == project_id,),
+    )
     gene = ProjectGene(
         project_id=project_id,
         **data.model_dump(),
-        sort_order=max_order + 1,
+        sort_order=next_order,
     )
     session.add(gene)
     await session.commit()
@@ -162,15 +184,13 @@ async def delete_gene(session: AsyncSession, gene: ProjectGene) -> None:
 async def reorder_genes(
     session: AsyncSession, project_id: int, gene_ids: list[int],
 ) -> list[ProjectGene]:
-    query = select(ProjectGene).where(
-        ProjectGene.project_id == project_id,
+    await sort_ordering.reorder_subset(
+        session, ProjectGene, gene_ids,
+        filters=(ProjectGene.project_id == project_id,),
+        entity_label="项目基因",
     )
-    genes = {g.id: g for g in (await session.execute(query)).scalars().all()}
-    for idx, gid in enumerate(gene_ids):
-        if gid in genes:
-            genes[gid].sort_order = idx
     await session.commit()
-    return sorted(genes.values(), key=lambda g: g.sort_order)
+    return await list_genes(session, project_id)
 
 
 async def get_gene(
@@ -223,6 +243,7 @@ async def _get_counts(session: AsyncSession, project_id: int) -> dict:
 def _project_dict(p: Project) -> dict:
     return {
         "id": p.id,
+        "sort_order": p.sort_order,
         "name": p.name,
         "description": p.description,
         "created_at": p.created_at,

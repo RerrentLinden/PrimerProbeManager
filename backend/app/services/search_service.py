@@ -70,7 +70,7 @@ async def _search_primers(
     query = (
         select(Primer)
         .where(or_(*filters))
-        .order_by(Primer.id.desc())
+        .order_by(Primer.sort_order.asc(), Primer.id.asc())
         .limit(MAX_SEARCH_RESULTS)
     )
     primers = list((await session.execute(query)).scalars().all())
@@ -115,7 +115,7 @@ async def _search_boxes(session: AsyncSession, pattern: str) -> list[dict]:
                 FreezerBox.storage_location.ilike(pattern),
             )
         )
-        .order_by(FreezerBox.id.desc())
+        .order_by(FreezerBox.sort_order.asc(), FreezerBox.id.asc())
         .limit(MAX_SEARCH_RESULTS)
     )
     boxes = list((await session.execute(query)).scalars().all())
@@ -126,7 +126,7 @@ async def _search_projects(session: AsyncSession, pattern: str) -> list[dict]:
     query = (
         select(Project)
         .where(Project.name.ilike(pattern))
-        .order_by(Project.id.desc())
+        .order_by(Project.sort_order.asc(), Project.id.asc())
         .limit(MAX_SEARCH_RESULTS)
     )
     projects = list((await session.execute(query)).scalars().all())
@@ -143,7 +143,7 @@ async def _load_projects_by_primer_ids(
         select(ProjectPrimer.primer_id, Project.id, Project.name)
         .join(Project, Project.id == ProjectPrimer.project_id)
         .where(ProjectPrimer.primer_id.in_(primer_ids))
-        .order_by(Project.id.desc())
+        .order_by(Project.sort_order.asc(), Project.id.asc())
     )
     rows = (await session.execute(query)).all()
     projects_by_primer: dict[int, list[dict]] = {primer_id: [] for primer_id in primer_ids}

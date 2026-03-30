@@ -10,13 +10,13 @@ from app.models.primer import Primer
 from app.schemas.box import (
     BoxCreate, BoxUpdate, SlotTubeInfo, GridSlot, BoxMoveRequest,
 )
-from app.services import tube_lifecycle_log_service
+from app.services import sort_ordering, tube_lifecycle_log_service
 
 
 async def list_boxes(
     session: AsyncSession, *, search: str | None = None,
 ) -> list[dict]:
-    query = select(FreezerBox).order_by(FreezerBox.id.desc())
+    query = select(FreezerBox).order_by(FreezerBox.sort_order.asc(), FreezerBox.id.asc())
     if search:
         query = query.where(FreezerBox.name.ilike(f"%{search}%"))
     boxes = (await session.execute(query)).scalars().all()
@@ -66,7 +66,9 @@ def build_grid(box: FreezerBox) -> list[list[GridSlot]]:
 
 
 async def create_box(session: AsyncSession, data: BoxCreate) -> FreezerBox:
-    box = FreezerBox(**data.model_dump())
+    payload = data.model_dump()
+    payload["sort_order"] = await sort_ordering.next_sort_order(session, FreezerBox)
+    box = FreezerBox(**payload)
     session.add(box)
     await session.commit()
     await session.refresh(box)
@@ -83,8 +85,29 @@ async def update_box(
     return box
 
 
+async def reorder_boxes(
+    session: AsyncSession, box_ids: list[int],
+) -> None:
+    await sort_ordering.reorder_subset(
+        session, FreezerBox, box_ids, entity_label="冻存盒",
+    )
+    await session.commit()
+
+
+async def move_box(
+    session: AsyncSession, box_id: int, target_sort_order: int,
+) -> None:
+    await sort_ordering.move_item(
+        session, FreezerBox, box_id, target_sort_order, entity_label="冻存盒",
+    )
+    await session.commit()
+
+
 async def delete_box(session: AsyncSession, box: FreezerBox) -> None:
+    old_order = box.sort_order
     await session.delete(box)
+    await session.flush()
+    await sort_ordering.compact_after_delete(session, FreezerBox, old_order)
     await session.commit()
 
 
@@ -219,6 +242,7 @@ async def _get_position(
 def _box_to_dict(box: FreezerBox, occupied: int) -> dict:
     return {
         "id": box.id,
+        "sort_order": box.sort_order,
         "name": box.name,
         "rows": box.rows,
         "cols": box.cols,

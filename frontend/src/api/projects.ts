@@ -23,6 +23,14 @@ export function deleteProject(id: number) {
   return client.delete(`/projects/${id}`)
 }
 
+export function reorderProjects(orderedIds: number[]) {
+  return client.put('/projects/reorder', { ordered_ids: orderedIds })
+}
+
+export function moveProjectSortOrder(id: number, sortOrder: number) {
+  return client.put(`/projects/${id}/sort-order`, { sort_order: sortOrder })
+}
+
 export function addProjectPrimer(projectId: number, primerId: number) {
   return client.post(`/projects/${projectId}/primers`, { primer_id: primerId })
 }

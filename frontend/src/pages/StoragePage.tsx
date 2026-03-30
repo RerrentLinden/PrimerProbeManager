@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { fetchBoxes, fetchBox, searchPlacedTubes } from '@/api/boxes'
+import { fetchBoxes, fetchBox, searchPlacedTubes, reorderBoxes } from '@/api/boxes'
 import type { TubeSearchResult } from '@/api/boxes'
+import { useDragReorder } from '@/hooks/useDragReorder'
+import type { DragReorderResult } from '@/hooks/useDragReorder'
+import DragGhost from '@/components/common/DragGhost'
 import { archiveTube, moveTube, createUsageLog } from '@/api/tubes'
 import type { FreezerBox, GridSlot, GridTubeInfo } from '@/types'
 import BoxList from '@/components/Storage/BoxList'
@@ -83,6 +86,13 @@ export default function StoragePage() {
   useEffect(() => { loadGrid() }, [loadGrid])
   const refresh = useCallback(() => { loadBoxes(); loadGrid() }, [loadBoxes, loadGrid])
 
+  const boxReorder = useDragReorder({
+    items: boxes,
+    getId: b => b.id,
+    getLabel: b => b.name,
+    onReorder: async (ids) => { await reorderBoxes(ids); await loadBoxes() },
+  })
+
   useEffect(() => {
     if (!boxParam) return
     const nextBoxId = Number(boxParam)
@@ -150,9 +160,9 @@ export default function StoragePage() {
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       <div className="lg:w-64 shrink-0">
         <div className="hidden lg:block">
-          <BoxList boxes={boxes} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} />
+          <BoxList boxes={boxReorder.items} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} reorder={boxReorder} />
         </div>
-        <MobileBoxSelector boxes={boxes} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} />
+        <MobileBoxSelector boxes={boxReorder.items} selectedId={selectedBoxId} onSelect={setSelectedBoxId} onCreateBox={() => setShowCreateBox(true)} reorder={boxReorder} />
       </div>
 
       <div className="flex-1 card p-4">
@@ -270,12 +280,14 @@ export default function StoragePage() {
       {selectedBox && (
         <EditBoxModal open={editingBox} box={selectedBox} onClose={() => setEditingBox(false)} onSuccess={refresh} onDelete={() => { setSelectedBoxId(null); setSelectedBox(null); setGrid(null); refresh() }} />
       )}
+
+      {boxReorder.drag && <DragGhost label={boxReorder.drag.label} x={boxReorder.drag.x} y={boxReorder.drag.y} />}
     </div>
   )
 }
 
-function MobileBoxSelector({ boxes, selectedId, onSelect, onCreateBox }: {
-  readonly boxes: FreezerBox[]; readonly selectedId: number | null; readonly onSelect: (id: number) => void; readonly onCreateBox: () => void
+function MobileBoxSelector({ boxes, selectedId, onSelect, onCreateBox, reorder }: {
+  readonly boxes: FreezerBox[]; readonly selectedId: number | null; readonly onSelect: (id: number) => void; readonly onCreateBox: () => void; readonly reorder?: DragReorderResult<FreezerBox>
 }) {
   return (
     <div className="lg:hidden flex items-center gap-2">
@@ -291,9 +303,10 @@ function MobileBoxSelector({ boxes, selectedId, onSelect, onCreateBox }: {
                 b.id === selectedId
                   ? 'border-lab-accent bg-lab-accent/10 text-lab-accent font-medium'
                   : 'border-lab-border bg-lab-surface text-lab-muted hover:border-lab-border-light'
-              }`}
+              } ${reorder?.isDragSource(b.id) ? 'opacity-40' : ''}`}
+              {...reorder?.getItemProps(b.id)}
             >
-              {b.name}
+              <span className="text-xs text-lab-muted/70 mr-1">{b.sort_order}</span>{b.name}
             </button>
           ))}
         </div>

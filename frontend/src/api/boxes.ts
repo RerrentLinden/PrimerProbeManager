@@ -56,3 +56,11 @@ interface MovePositionData {
 export function movePosition(boxId: number, data: MovePositionData) {
   return client.post(`/boxes/${boxId}/positions/move`, data)
 }
+
+export function reorderBoxes(orderedIds: number[]) {
+  return client.put('/boxes/reorder', { ordered_ids: orderedIds })
+}
+
+export function moveBoxSortOrder(id: number, sortOrder: number) {
+  return client.put(`/boxes/${id}/sort-order`, { sort_order: sortOrder })
+}

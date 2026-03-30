@@ -34,6 +34,13 @@ def _migrate(conn) -> None:
                 "ADD COLUMN low_volume_alert_threshold_ul FLOAT"
             ))
         _migrate_primer_identity_indexes(conn)
+        _ensure_sort_order_column(conn, "primers")
+
+    if "freezer_boxes" in insp.get_table_names():
+        _ensure_sort_order_column(conn, "freezer_boxes")
+
+    if "projects" in insp.get_table_names():
+        _ensure_sort_order_column(conn, "projects")
 
     if "project_genes" in insp.get_table_names():
         _migrate_project_genes_constraint(conn)
@@ -52,6 +59,25 @@ def _migrate(conn) -> None:
             ))
             conn.execute(text("CREATE INDEX ix_project_primers_project_id ON project_primers(project_id)"))
             conn.execute(text("CREATE INDEX ix_project_primers_primer_id ON project_primers(primer_id)"))
+
+
+def _ensure_sort_order_column(conn, table_name: str) -> None:
+    cols = {
+        c["name"]
+        for c in conn.exec_driver_sql(
+            f"PRAGMA table_info('{table_name}')"
+        ).mappings().all()
+    }
+    if "sort_order" in cols:
+        return
+    conn.exec_driver_sql(
+        f"ALTER TABLE {table_name} ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0"
+    )
+    conn.exec_driver_sql(
+        f"UPDATE {table_name} SET sort_order = ("
+        f"SELECT COUNT(*) FROM {table_name} AS t2 "
+        f"WHERE t2.id <= {table_name}.id)"
+    )
 
 
 def _migrate_project_genes_constraint(conn) -> None:
@@ -152,6 +178,7 @@ def _rebuild_primers_table(conn) -> None:
         "tm FLOAT,"
         "purification_method VARCHAR,"
         "low_volume_alert_threshold_ul FLOAT,"
+        "sort_order INTEGER NOT NULL DEFAULT 0,"
         "created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,"
         "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,"
         "CONSTRAINT uq_primer_name_mw UNIQUE (name, mw)"
@@ -161,12 +188,13 @@ def _rebuild_primers_table(conn) -> None:
         "INSERT INTO primers ("
         "id, name, sequence, base_count, modification_5prime, modification_3prime, "
         "mw, ug_per_od, nmol_per_od, gc_percent, tm, purification_method, "
-        "low_volume_alert_threshold_ul, created_at, updated_at"
+        "low_volume_alert_threshold_ul, sort_order, created_at, updated_at"
         ") "
         "SELECT "
         "id, name, sequence, base_count, modification_5prime, modification_3prime, "
         "mw, ug_per_od, nmol_per_od, gc_percent, tm, purification_method, "
-        "low_volume_alert_threshold_ul, created_at, updated_at "
+        "low_volume_alert_threshold_ul, "
+        "COALESCE(sort_order, 0), created_at, updated_at "
         "FROM primers_old"
     )
     conn.exec_driver_sql("CREATE INDEX ix_primers_name ON primers(name)")

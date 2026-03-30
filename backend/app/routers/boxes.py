@@ -6,6 +6,7 @@ from app.database import get_session
 from app.schemas.box import (
     BoxCreate, BoxUpdate, BoxResponse, BoxDetailResponse,
     PlaceRequest, BoxMoveRequest,
+    BoxReorderRequest, BoxSortMoveRequest,
 )
 from app.services import box_service
 
@@ -68,6 +69,15 @@ async def list_boxes(
     return await box_service.list_boxes(session, search=search)
 
 
+@router.put("/reorder")
+async def reorder_boxes(
+    body: BoxReorderRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    await box_service.reorder_boxes(session, body.ordered_ids)
+    return {"ok": True}
+
+
 @router.post("", response_model=BoxResponse, status_code=status.HTTP_201_CREATED)
 async def create_box(
     body: BoxCreate,
@@ -75,12 +85,23 @@ async def create_box(
 ):
     box = await box_service.create_box(session, body)
     return BoxResponse(
-        id=box.id, name=box.name, rows=box.rows, cols=box.cols,
+        id=box.id, sort_order=box.sort_order,
+        name=box.name, rows=box.rows, cols=box.cols,
         storage_location=box.storage_location,
         storage_temperature=box.storage_temperature,
         occupied_count=0,
         created_at=box.created_at, updated_at=box.updated_at,
     )
+
+
+@router.put("/{box_id}/sort-order")
+async def move_box_sort_order(
+    box_id: int,
+    body: BoxSortMoveRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    await box_service.move_box(session, box_id, body.sort_order)
+    return {"ok": True}
 
 
 @router.get("/{box_id}", response_model=BoxDetailResponse)
@@ -94,7 +115,8 @@ async def get_box(
     grid = box_service.build_grid(box)
     occupied = sum(1 for pos in box.positions)
     return BoxDetailResponse(
-        id=box.id, name=box.name, rows=box.rows, cols=box.cols,
+        id=box.id, sort_order=box.sort_order,
+        name=box.name, rows=box.rows, cols=box.cols,
         storage_location=box.storage_location,
         storage_temperature=box.storage_temperature,
         occupied_count=occupied, grid=grid,
@@ -114,7 +136,8 @@ async def update_box(
     updated = await box_service.update_box(session, box, body)
     occupied = sum(1 for _ in updated.positions)
     return BoxResponse(
-        id=updated.id, name=updated.name, rows=updated.rows, cols=updated.cols,
+        id=updated.id, sort_order=updated.sort_order,
+        name=updated.name, rows=updated.rows, cols=updated.cols,
         storage_location=updated.storage_location,
         storage_temperature=updated.storage_temperature,
         occupied_count=occupied,

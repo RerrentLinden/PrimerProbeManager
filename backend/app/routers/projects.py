@@ -8,6 +8,7 @@ from app.schemas.project import (
     ProjectPrimerInfo,
     ProjectGeneCreate, ProjectGeneUpdate, ProjectGeneResponse,
     GeneReorderRequest, AddPrimerRequest,
+    ProjectReorderRequest, ProjectMoveRequest,
 )
 from app.services import project_service
 
@@ -25,6 +26,15 @@ async def list_projects(
     return await project_service.list_projects(session, search=search)
 
 
+@router.put("/reorder")
+async def reorder_projects(
+    body: ProjectReorderRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    await project_service.reorder_projects(session, body.ordered_ids)
+    return {"ok": True}
+
+
 @router.post(
     "", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED,
 )
@@ -34,9 +44,20 @@ async def create_project(
 ):
     p = await project_service.create_project(session, body)
     return ProjectResponse(
-        id=p.id, name=p.name, description=p.description,
+        id=p.id, sort_order=p.sort_order,
+        name=p.name, description=p.description,
         created_at=p.created_at, updated_at=p.updated_at,
     )
+
+
+@router.put("/{project_id}/sort-order")
+async def move_project_sort_order(
+    project_id: int,
+    body: ProjectMoveRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    await project_service.move_project(session, project_id, body.sort_order)
+    return {"ok": True}
 
 
 @router.get("/{project_id}", response_model=ProjectDetailResponse)
@@ -62,7 +83,8 @@ async def update_project(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Project not found")
     updated = await project_service.update_project(session, project, body)
     return ProjectResponse(
-        id=updated.id, name=updated.name, description=updated.description,
+        id=updated.id, sort_order=updated.sort_order,
+        name=updated.name, description=updated.description,
         created_at=updated.created_at, updated_at=updated.updated_at,
     )
 

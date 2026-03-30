@@ -11,8 +11,17 @@ class ProjectUpdate(BaseModel):
     description: str | None = None
 
 
+class ProjectReorderRequest(BaseModel):
+    ordered_ids: list[int]
+
+
+class ProjectMoveRequest(BaseModel):
+    sort_order: int
+
+
 class ProjectResponse(BaseModel):
     id: int
+    sort_order: int
     name: str
     description: str | None
     primer_count: int = 0
