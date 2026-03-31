@@ -30,6 +30,9 @@ export interface TubeImportPreviewRow {
   readonly tube_number: string | null
   readonly dissolution_date: string | null
   readonly initial_volume_ul: number
+  readonly box_name: string | null
+  readonly well_position: string | null
+  readonly placement_message: string | null
   readonly action: ImportAction
   readonly message: string | null
 }
@@ -43,6 +46,7 @@ export interface ImportPreview {
   readonly tube_create_count: number
   readonly tube_update_count: number
   readonly tube_conflict_count: number
+  readonly tube_placement_count: number
   readonly error_count: number
   readonly available_conflict_strategies: ImportConflictStrategy[]
 }
@@ -67,6 +71,7 @@ export interface ImportConfirmResult {
   readonly tubes_created: number
   readonly tubes_updated: number
   readonly tubes_skipped: number
+  readonly tubes_placed: number
 }
 
 export interface DatabaseBackupResult {

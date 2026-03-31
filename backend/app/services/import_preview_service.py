@@ -1,8 +1,11 @@
 from collections import Counter
 from dataclasses import dataclass
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.box_position import BoxPosition
+from app.models.freezer_box import FreezerBox
 from app.models.primer import Primer
 from app.schemas.import_data import ImportPreviewResponse, PrimerPreviewRow, TubePreviewRow
 from app.services.import_db_service import (
@@ -11,7 +14,7 @@ from app.services.import_db_service import (
     load_primers_by_identities,
     suggest_renamed_primer_name,
 )
-from app.services.import_excel_service import PrimerSheetRow, TubeSheetRow
+from app.services.import_excel_service import PrimerSheetRow, TubeSheetRow, parse_well_position
 
 CONFLICT_STRATEGIES = ["error", "rename", "overwrite", "skip"]
 RESOLVABLE_STRATEGIES = ["rename", "overwrite", "skip"]
@@ -45,6 +48,10 @@ async def build_preview(
         tube_create_count=sum(item.action == "create" for item in tube_preview),
         tube_update_count=sum(item.action == "update" for item in tube_preview),
         tube_conflict_count=sum(item.action == "conflict" for item in tube_preview),
+        tube_placement_count=sum(
+            item.placement_message is not None and "将放入" in item.placement_message
+            for item in tube_preview
+        ),
         error_count=sum(item.action == "error" for item in primer_preview + tube_preview),
         available_conflict_strategies=CONFLICT_STRATEGIES,
     )
@@ -146,6 +153,9 @@ async def _build_tube_preview_rows(
     db_primers = await load_primers_by_identities(
         session, (_tube_identity(row) for row in rows)
     )
+    box_names = {row.box_name for row in rows if row.box_name}
+    box_map = await _load_boxes_by_names(session, box_names) if box_names else {}
+    claimed_slots: set[tuple[int, int, int]] = set()
     preview_rows: list[TubePreviewRow] = []
     for row in rows:
         action, message, primer_id = _tube_preview_parent_state(
@@ -154,11 +164,18 @@ async def _build_tube_preview_rows(
             decision_by_identity=decision_by_identity,
             db_primers=db_primers,
         )
+        placement_msg = await _validate_placement(
+            session, row, box_map, claimed_slots,
+        )
         if action in {"error", "conflict"}:
-            preview_rows.append(_new_tube_preview_row(row, action, message))
+            preview_rows.append(
+                _new_tube_preview_row(row, action, message, placement_msg)
+            )
             continue
         if primer_id is None:
-            preview_rows.append(_new_tube_preview_row(row, "create", "父引探将被新增"))
+            preview_rows.append(
+                _new_tube_preview_row(row, "create", "父引探将被新增", placement_msg)
+            )
             continue
         existing = await find_tube(
             session,
@@ -168,7 +185,9 @@ async def _build_tube_preview_rows(
         )
         preview_action = "update" if existing else "create"
         preview_message = "已存在，将更新体积" if existing else "新增"
-        preview_rows.append(_new_tube_preview_row(row, preview_action, preview_message))
+        preview_rows.append(
+            _new_tube_preview_row(row, preview_action, preview_message, placement_msg)
+        )
     return preview_rows
 
 
@@ -202,7 +221,10 @@ def _tube_preview_parent_state(
 
 
 def _new_tube_preview_row(
-    row: TubeSheetRow, action: str, message: str
+    row: TubeSheetRow,
+    action: str,
+    message: str,
+    placement_message: str | None = None,
 ) -> TubePreviewRow:
     return TubePreviewRow(
         row_number=row.row_number,
@@ -213,9 +235,57 @@ def _new_tube_preview_row(
         tube_number=row.tube_number,
         dissolution_date=str(row.dissolution_date) if row.dissolution_date else None,
         initial_volume_ul=row.initial_volume_ul,
+        box_name=row.box_name,
+        well_position=row.well_position,
+        placement_message=placement_message,
         action=action,
         message=message,
     )
+
+
+async def _load_boxes_by_names(
+    session: AsyncSession, names: set[str],
+) -> dict[str, FreezerBox]:
+    if not names:
+        return {}
+    query = select(FreezerBox).where(FreezerBox.name.in_(names))
+    boxes = (await session.execute(query)).scalars().all()
+    return {box.name: box for box in boxes}
+
+
+async def _validate_placement(
+    session: AsyncSession,
+    row: TubeSheetRow,
+    box_map: dict[str, FreezerBox],
+    claimed_slots: set[tuple[int, int, int]],
+) -> str | None:
+    if not row.box_name or not row.well_position:
+        return None
+    box = box_map.get(row.box_name)
+    if box is None:
+        return f"冻存盒「{row.box_name}」不存在"
+    parsed_row, parsed_col = parse_well_position(row.well_position)
+    if parsed_row < 0 or parsed_row >= box.rows or parsed_col < 0 or parsed_col >= box.cols:
+        return f"{row.well_position} 超出冻存盒范围({box.rows}×{box.cols})"
+    slot_key = (box.id, parsed_row, parsed_col)
+    if slot_key in claimed_slots:
+        return f"模板内重复放置: {row.box_name} {row.well_position}"
+    claimed_slots.add(slot_key)
+    existing = await _check_slot_occupied(session, box.id, parsed_row, parsed_col)
+    if existing:
+        return f"{row.box_name} {row.well_position} 已被占用"
+    return f"将放入 {row.box_name} {row.well_position}"
+
+
+async def _check_slot_occupied(
+    session: AsyncSession, box_id: int, row: int, col: int,
+) -> bool:
+    query = select(BoxPosition.id).where(
+        BoxPosition.box_id == box_id,
+        BoxPosition.row == row,
+        BoxPosition.col == col,
+    )
+    return (await session.execute(query)).scalar_one_or_none() is not None
 
 
 def primer_identity(row: PrimerSheetRow) -> PrimerIdentity:

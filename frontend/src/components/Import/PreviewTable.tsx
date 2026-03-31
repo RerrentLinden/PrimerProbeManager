@@ -39,13 +39,14 @@ export default function PreviewTable({
 
 function SummaryRow({ preview }: { readonly preview: ImportPreview }) {
   return (
-    <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 lg:grid-cols-7">
+    <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 lg:grid-cols-8">
       <SummaryItem label="引探新增" value={preview.primer_create_count} tone="text-lab-success" />
       <SummaryItem label="引探更新" value={preview.primer_update_count} tone="text-lab-warning" />
       <SummaryItem label="引探冲突" value={preview.primer_conflict_count} tone="text-lab-probe" />
       <SummaryItem label="分管新增" value={preview.tube_create_count} tone="text-lab-success" />
       <SummaryItem label="分管更新" value={preview.tube_update_count} tone="text-lab-warning" />
       <SummaryItem label="分管冲突" value={preview.tube_conflict_count} tone="text-lab-probe" />
+      <SummaryItem label="分管放置" value={preview.tube_placement_count} tone="text-lab-primary" />
       <SummaryItem label="错误行数" value={preview.error_count} tone="text-lab-danger" />
     </div>
   )
@@ -206,6 +207,7 @@ function TubeTable({ rows }: { readonly rows: TubeImportPreviewRow[] }) {
               <th className={CELL_CLASS}>分管编号</th>
               <th className={CELL_CLASS}>定容日期</th>
               <th className={CELL_CLASS}>初始体积(uL)</th>
+              <th className={CELL_CLASS}>位置</th>
               <th className={CELL_CLASS}>动作</th>
               <th className={CELL_CLASS}>说明</th>
             </tr>
@@ -220,6 +222,14 @@ function TubeTable({ rows }: { readonly rows: TubeImportPreviewRow[] }) {
                 <td className={CELL_CLASS}>{row.tube_number ?? '-'}</td>
                 <td className={CELL_CLASS}>{row.dissolution_date ?? '-'}</td>
                 <td className={CELL_CLASS}>{row.initial_volume_ul}</td>
+                <td className={CELL_CLASS}>
+                  {row.box_name ? (
+                    <span title={row.placement_message ?? ''}>{row.box_name} {row.well_position}</span>
+                  ) : '-'}
+                  {row.placement_message && !row.placement_message.startsWith('将放入') && (
+                    <p className="mt-0.5 text-[11px] text-lab-danger">{row.placement_message}</p>
+                  )}
+                </td>
                 <td className={CELL_CLASS}>{actionLabel(row.action)}</td>
                 <td className={`${CELL_CLASS} text-lab-muted`}>{row.message ?? '-'}</td>
               </tr>

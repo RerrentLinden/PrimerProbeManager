@@ -28,6 +28,8 @@ TUBE_HEADERS = [
     "分管编号",
     "定容日期*",
     "产量(μL)*",
+    "位置",
+    "孔位",
 ]
 PROJECT_SEPARATORS = ("，", ",", "；", ";", "、", "\n")
 
@@ -61,6 +63,8 @@ class TubeSheetRow:
     tube_number: str | None
     dissolution_date: date
     initial_volume_ul: float
+    box_name: str | None = None
+    well_position: str | None = None
 
     @property
     def import_key(self) -> str:
@@ -129,6 +133,20 @@ def _parse_tubes(workbook: Workbook) -> list[TubeSheetRow]:
     for row_number, values in _iter_rows(sheet):
         if _is_blank(values):
             continue
+        box_name = _optional_string(values, 6)
+        well_position = _optional_string(values, 7)
+        if box_name and not well_position:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行填写了位置但缺少孔位",
+            )
+        if well_position and not box_name:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行填写了孔位但缺少位置",
+            )
+        if well_position:
+            _validate_well_format(well_position, row_number)
         rows.append(
             TubeSheetRow(
                 row_number=row_number,
@@ -138,6 +156,8 @@ def _parse_tubes(workbook: Workbook) -> list[TubeSheetRow]:
                 tube_number=_optional_string(values, 3),
                 dissolution_date=_require_date(values, 4, row_number, TUBE_SHEET_NAME),
                 initial_volume_ul=_require_float(values, 5, row_number, TUBE_SHEET_NAME),
+                box_name=box_name,
+                well_position=well_position.upper() if well_position else None,
             )
         )
     return rows
@@ -230,13 +250,33 @@ def _optional_date(values: tuple, index: int, row: int, sheet: str) -> date | No
         return value.date()
     if isinstance(value, date):
         return value
-    try:
-        return datetime.strptime(str(value).strip(), "%Y-%m-%d").date()
-    except ValueError as exc:
+    text = str(value).strip()
+    if isinstance(value, (int, float)):
+        text = str(int(value))
+    for fmt in ("%Y-%m-%d", "%Y%m%d"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    raise HTTPException(
+        status.HTTP_400_BAD_REQUEST,
+        detail=f"{sheet} 第 {row} 行第 {index + 1} 列日期格式应为 YYYY-MM-DD 或 YYYYMMDD",
+    )
+
+
+def parse_well_position(well: str) -> tuple[int, int]:
+    row_char = well[0].upper()
+    row = ord(row_char) - ord("A")
+    col = int(well[1:]) - 1
+    return row, col
+
+
+def _validate_well_format(well: str, row_number: int) -> None:
+    if len(well) < 2 or not well[0].isalpha() or not well[1:].isdigit():
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            detail=f"{sheet} 第 {row} 行第 {index + 1} 列日期格式应为 YYYY-MM-DD",
-        ) from exc
+            detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行孔位格式无效(应为 A1、B2 等)",
+        )
 
 
 def _normalize_gc(value: float | None) -> float | None:

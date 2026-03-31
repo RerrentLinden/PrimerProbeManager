@@ -1,6 +1,9 @@
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.box_position import BoxPosition
+from app.models.freezer_box import FreezerBox
 from app.models.primer import Primer
 from app.models.primer_tube import PrimerTube
 from app.schemas.import_data import (
@@ -15,7 +18,7 @@ from app.services.import_db_service import (
     find_tube,
     load_primers_by_identities,
 )
-from app.services.import_excel_service import PrimerSheetRow, TubeSheetRow
+from app.services.import_excel_service import PrimerSheetRow, TubeSheetRow, parse_well_position
 from app.services.import_project_service import attach_projects_to_primer
 from app.services.import_preview_service import (
     PrimerDecision,
@@ -61,6 +64,7 @@ async def apply_confirm(
         tubes_created=stats["tubes_created"],
         tubes_updated=stats["tubes_updated"],
         tubes_skipped=stats["tubes_skipped"],
+        tubes_placed=stats["tubes_placed"],
     )
 
 
@@ -73,6 +77,7 @@ def _empty_stats() -> dict[str, int]:
         "tubes_created": 0,
         "tubes_updated": 0,
         "tubes_skipped": 0,
+        "tubes_placed": 0,
     }
 
 
@@ -175,6 +180,8 @@ async def _apply_tube_rows(
 ) -> None:
     duplicates = duplicate_tube_keys(rows)
     db_primers = await load_primers_by_identities(session, (tube_identity(row) for row in rows))
+    box_names = {row.box_name for row in rows if row.box_name}
+    box_map = await _load_boxes_by_names(session, box_names) if box_names else {}
     for row in rows:
         if tube_key(row) in duplicates:
             raise HTTPException(status.HTTP_409_CONFLICT, detail=f"分管行 {row.row_number} 在模板内重复")
@@ -208,9 +215,16 @@ async def _apply_tube_rows(
                 primer_type=parent.type,
             )
             stats["tubes_created"] += 1
+            placed = await _place_tube(session, tube.id, row, box_map)
+            if placed:
+                stats["tubes_placed"] += 1
             continue
         _update_tube(existing, row)
         stats["tubes_updated"] += 1
+        if not await _tube_has_position(session, existing.id):
+            placed = await _place_tube(session, existing.id, row, box_map)
+            if placed:
+                stats["tubes_placed"] += 1
 
 
 def _new_tube(primer_id: int, row: TubeSheetRow) -> PrimerTube:
@@ -260,3 +274,59 @@ def _build_primer_payload(row: PrimerSheetRow, name: str) -> dict:
         "purification_method": row.purification_method,
         "base_count": count_bases(row.sequence),
     }
+
+
+async def _load_boxes_by_names(
+    session: AsyncSession, names: set[str],
+) -> dict[str, FreezerBox]:
+    if not names:
+        return {}
+    query = select(FreezerBox).where(FreezerBox.name.in_(names))
+    boxes = (await session.execute(query)).scalars().all()
+    return {box.name: box for box in boxes}
+
+
+async def _place_tube(
+    session: AsyncSession,
+    tube_id: int,
+    row: TubeSheetRow,
+    box_map: dict[str, FreezerBox],
+) -> bool:
+    if not row.box_name or not row.well_position:
+        return False
+    box = box_map.get(row.box_name)
+    if box is None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail=f"分管行 {row.row_number}: 冻存盒「{row.box_name}」不存在",
+        )
+    parsed_row, parsed_col = parse_well_position(row.well_position)
+    if parsed_row < 0 or parsed_row >= box.rows or parsed_col < 0 or parsed_col >= box.cols:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"分管行 {row.row_number}: {row.well_position} 超出冻存盒范围",
+        )
+    occupied = (
+        await session.execute(
+            select(BoxPosition.id).where(
+                BoxPosition.box_id == box.id,
+                BoxPosition.row == parsed_row,
+                BoxPosition.col == parsed_col,
+            )
+        )
+    ).scalar_one_or_none()
+    if occupied is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail=f"分管行 {row.row_number}: {row.box_name} {row.well_position} 已被占用",
+        )
+    session.add(BoxPosition(
+        box_id=box.id, row=parsed_row, col=parsed_col, tube_id=tube_id,
+    ))
+    await session.flush()
+    return True
+
+
+async def _tube_has_position(session: AsyncSession, tube_id: int) -> bool:
+    query = select(BoxPosition.id).where(BoxPosition.tube_id == tube_id)
+    return (await session.execute(query)).scalar_one_or_none() is not None

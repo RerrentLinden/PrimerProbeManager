@@ -283,6 +283,7 @@ function buildImportResult(data: {
   readonly tubes_created: number
   readonly tubes_updated: number
   readonly tubes_skipped: number
+  readonly tubes_placed: number
 }): string {
   return [
     `引探新增 ${data.primers_created}`,
@@ -292,6 +293,7 @@ function buildImportResult(data: {
     `分管新增 ${data.tubes_created}`,
     `分管更新 ${data.tubes_updated}`,
     `分管跳过 ${data.tubes_skipped}`,
+    `分管放置 ${data.tubes_placed}`,
   ].join('，')
 }
 

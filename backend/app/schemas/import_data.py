@@ -29,6 +29,9 @@ class TubePreviewRow(BaseModel):
     tube_number: str | None = None
     dissolution_date: str | None = None
     initial_volume_ul: float
+    box_name: str | None = None
+    well_position: str | None = None
+    placement_message: str | None = None
     action: str
     message: str | None = None
 
@@ -42,6 +45,7 @@ class ImportPreviewResponse(BaseModel):
     tube_create_count: int
     tube_update_count: int
     tube_conflict_count: int = 0
+    tube_placement_count: int = 0
     error_count: int
     available_conflict_strategies: list[str] = []
 
@@ -66,3 +70,4 @@ class ImportConfirmResponse(BaseModel):
     tubes_created: int
     tubes_updated: int
     tubes_skipped: int = 0
+    tubes_placed: int = 0
