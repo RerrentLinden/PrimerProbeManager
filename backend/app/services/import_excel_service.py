@@ -28,7 +28,7 @@ TUBE_HEADERS = [
     "分管编号",
     "定容日期*",
     "产量(μL)*",
-    "位置",
+    "冻存盒",
     "孔位",
 ]
 PROJECT_SEPARATORS = ("，", ",", "；", ";", "、", "\n")
@@ -138,12 +138,12 @@ def _parse_tubes(workbook: Workbook) -> list[TubeSheetRow]:
         if box_name and not well_position:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行填写了位置但缺少孔位",
+                detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行填写了冻存盒但缺少孔位",
             )
         if well_position and not box_name:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行填写了孔位但缺少位置",
+                detail=f"{TUBE_SHEET_NAME} 第 {row_number} 行填写了孔位但缺少冻存盒",
             )
         if well_position:
             _validate_well_format(well_position, row_number)

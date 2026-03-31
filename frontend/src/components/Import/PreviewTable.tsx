@@ -207,7 +207,7 @@ function TubeTable({ rows }: { readonly rows: TubeImportPreviewRow[] }) {
               <th className={CELL_CLASS}>分管编号</th>
               <th className={CELL_CLASS}>定容日期</th>
               <th className={CELL_CLASS}>初始体积(uL)</th>
-              <th className={CELL_CLASS}>位置</th>
+              <th className={CELL_CLASS}>冻存盒</th>
               <th className={CELL_CLASS}>动作</th>
               <th className={CELL_CLASS}>说明</th>
             </tr>
